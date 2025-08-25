@@ -1,0 +1,16 @@
+# Logs
+*.log
+# SO / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+~$*.docx
+~$*.pptx
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# (Intencionalmente NO ignoramos) *.png *.jpg *.jpeg *.svg *.pdf *.drawio
