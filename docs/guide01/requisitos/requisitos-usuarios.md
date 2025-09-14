@@ -1,5 +1,4 @@
 # Requisitos de usuario
-## Técnica de obtención de requisitos empleada
 A continuación, se presentan los requisitos expresados directamente por el cliente durante la entrevista, en lenguaje natural.
 El ámbito funcional identificado corresponde principalmente al área de ventas, en los procesos de cotización, facturación, emisión de comprobantes electrónicos y transporte.
 
