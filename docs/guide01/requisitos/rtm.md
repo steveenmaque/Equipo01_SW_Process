@@ -5,9 +5,9 @@ Los requisitos funcionales se expresan en lenguaje técnico a partir de los requ
 
 ### 1. Registro de clientes
 - El sistema debe permitir registrar clientes con los siguientes campos obligatorios:
- - RUC
- - Razón social
- - Datos personales
+  - RUC
+  - Razón social
+  - Datos personales
 - El sistema debe validar que el RUC tenga 11 dígitos y sea único en la base de datos.
 ### 2. Generación de cotizaciones
 - El sistema debe generar cotizaciones numeradas de forma correlativa.
