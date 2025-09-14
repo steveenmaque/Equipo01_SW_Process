@@ -28,11 +28,11 @@ PrecioSinIGV = PrecioBase
 ### 4. Generación de guías de remisión remitente (GRE)
 - El sistema debe permitir generar GRE asociadas al número de orden de compra (OC).
 - Los campos obligatorios son:
- - Origen y destino
- - Fecha de traslado
- - Vehículo y placa
- - Conductor (nombre y DNI)
- - Peso/volumen de la carga
+   - Origen y destino
+   - Fecha de traslado
+   - Vehículo y placa
+   - Conductor (nombre y DNI)
+   - Peso/volumen de la carga
 ### 5. Almacenamiento y envío de documentos electrónicos
 - El sistema debe almacenar todos los comprobantes y cotizaciones en formato PDF y XML.
 - El sistema debe permitir la descarga y el envío automático por correo electrónico al cliente.
