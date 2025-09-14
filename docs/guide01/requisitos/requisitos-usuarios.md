@@ -1,7 +1,9 @@
 # Requisitos de usuario
 ## Técnica de obtención de requisitos empleada
-Para recopilar los requisitos del sistema se aplicó la técnica de entrevista directa con el cliente (gerente).
+A continuación, se presentan los requisitos expresados directamente por el cliente durante la entrevista, en lenguaje natural.
+El ámbito funcional identificado corresponde principalmente al área de ventas, en los procesos de cotización, facturación, emisión de comprobantes electrónicos y transporte.
 
+## Requisitos levantados
 - Se necesita generar cotizaciones rápidas y numeradas correlativamente.
 - Se requiere que la cotización muestre datos mínimos como cliente, RUC, teléfono, montos, IGV, condiciones y vigencia.
 - Se necesita que el sistema notifique sobre errores en descripciones o unidades de medida.
@@ -10,14 +12,12 @@ Para recopilar los requisitos del sistema se aplicó la técnica de entrevista d
 - Se necesita que el sistema almacene y envíe por correo los PDF/XML con código QR.
 - Se requiere que el sistema esté disponible durante los horarios laborales (8 am – 6 pm) y se recupere rápido ante caídas (máx. 4 h).
 
-Los requisitos del usuario se expresan en lenguaje natural. Los cuales han sido obtenidos mediante las técnicas de obtención de requisitos descritas en el Anexo A - “Técnicas de obtención de requisitos de software”. Puede incluir:
-- Ámbito funcional que deberá soportar el software por cada parte interesada. Por ejemplo, el área del cliente donde se encuentran los procesos que se necesitan automatizar:
-Compras, Ventas, Atención al cliente, Admisión de estudiantes, Inventario, etc.
-- La descripción del diseño de las funciones más importantes que se tiene previsto realice el sistema de información.
-
 ## Anexo A: Técnicas de obtención de requisitos de software
-Documentar las técnicas que utilizaron para realizar la obtención de requisitos del software: Entrevistas, Encuestas, Cuestionarios, Análisis de tareas, Análisis del dominio, 
-Prototipos (a través del uso de wireframes), Observación, entre otras técnicas innovadoras que el ED haya podido realizar durante la etapa de recopilación de requisitos del software.
+Para la recopilación de requisitos del sistema se aplicó la técnica de entrevista estructurada, oral y uno a uno.
+- La entrevista fue estructurada, ya que se elaboró previamente un cuestionario con preguntas escritas en una documento de Word.
+- Fue oral, porque se desarrolló de manera dialogada con el cliente.
+- Se trató de una entrevista uno a uno, pues se entrevistó al gerente general de la empresa de inflables publicitarios, mientras que los integrantes del equipo formularon las preguntas y registraron las respuestas.
+- La entrevista se realizó de forma virtual mediante Google Meet, donde los integrantes del equipo fueron formulando las preguntas y registrando las respuestas en notas compartidas.
 
 
 
