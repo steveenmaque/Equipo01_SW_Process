@@ -1,6 +1,6 @@
 ## Riesgos
 Se han identificado los siguientes riesgos potenciales que podrían afectar el proyecto. Para cada uno, se define su probabilidad, impacto y un plan de mitigación.
-## Ejemplo de lo que se espera: Tabla de riesgos
+## Tabla de riesgos
 | ID | Riesgo | Probabilidad | Impacto | Mitigación |
 |----|--------|--------------|---------|------------|
 | R1 | Retraso en las entregas del equipo: : El equipo podría no cumplir con los plazos establecidos para las actividades de implementación. | Alta | Medio | Monitoreo semanal |
