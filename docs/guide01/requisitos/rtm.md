@@ -3,13 +3,13 @@
 ## Requisitos funcionales
 Los requisitos funcionales se expresan en lenguaje técnico a partir de los requisitos mandatorios identificados en la entrevista con el cliente.
 
-1. Registro de clientes
+### 1. Registro de clientes
 - El sistema debe permitir registrar clientes con los siguientes campos obligatorios:
--- RUC
--- Razón social
--- Datos personales
+ - RUC
+ - Razón social
+ - Datos personales
 - El sistema debe validar que el RUC tenga 11 dígitos y sea único en la base de datos.
-2. Generación de cotizaciones
+### 2. Generación de cotizaciones
 - El sistema debe generar cotizaciones numeradas de forma correlativa.
 ```
 NroCotización = NroCotizaciónAnterior + 1
@@ -21,36 +21,36 @@ Fecha = FechaActual()
 PrecioConIGV = PrecioBase * 1.18
 PrecioSinIGV = PrecioBase
 ```
-3. Emisión de comprobantes electrónicos
+### 3. Emisión de comprobantes electrónicos
 - El sistema debe emitir facturas, boletas, notas de crédito y débito en formato electrónico (XML y PDF).
 - Cada comprobante debe incluir el código QR, logo de la empresa y datos de SUNAT obligatorios.
 - El sistema debe conectarse a SUNAT para validar cada comprobante en línea y almacenar el CDR de aceptación o rechazo.
-4. Generación de guías de remisión remitente (GRE)
+### 4. Generación de guías de remisión remitente (GRE)
 - El sistema debe permitir generar GRE asociadas al número de orden de compra (OC).
 - Los campos obligatorios son:
--- Origen y destino
--- Fecha de traslado
--- Vehículo y placa
--- Conductor (nombre y DNI)
--- Peso/volumen de la carga
-5. Almacenamiento y envío de documentos electrónicos
+ - Origen y destino
+ - Fecha de traslado
+ - Vehículo y placa
+ - Conductor (nombre y DNI)
+ - Peso/volumen de la carga
+### 5. Almacenamiento y envío de documentos electrónicos
 - El sistema debe almacenar todos los comprobantes y cotizaciones en formato PDF y XML.
 - El sistema debe permitir la descarga y el envío automático por correo electrónico al cliente.
-6. Registro de condiciones de pago
+### 6. Registro de condiciones de pago
 - El sistema debe permitir registrar las condiciones de pago:
--- Contado
--- Crédito
--- Adelanto (50%)
+ - Contado
+ - Crédito
+ - Adelanto (50%)
 ```
 MontoAdelanto = MontoTotal * 0.5
 MontoPendiente = MontoTotal - MontoAdelanto
 ```
-7. Registro de datos de traslado
+### 7. Registro de datos de traslado
 - El sistema debe registrar información logística para los envíos:
--- Origen/destino
--- Vehículo y placa
--- Nombre y DNI del conductor
--- Peso y volumen de los inflables transportados
+ - Origen/destino
+ - Vehículo y placa
+ - Nombre y DNI del conductor
+ - Peso y volumen de los inflables transportados
 
 ---------------------------------------------------------
 Los requisitos funcionales se expresan en lenguaje técnico a partir de los requisitos funcionales mandatorios que se han identificado en la categorización de requisitos de usuario.
