@@ -27,7 +27,7 @@ PrecioSinIGV = PrecioBase
 - El sistema debe conectarse a SUNAT para validar cada comprobante en línea y almacenar el CDR de aceptación o rechazo.
 ### 4. Generación de guías de remisión remitente (GRE)
 - El sistema debe permitir generar GRE asociadas al número de orden de compra (OC).
-- Los campos obligatorios son:
+- Los campos obligatorios son los siguientes:
    - Origen y destino
    - Fecha de traslado
    - Vehículo y placa
@@ -37,7 +37,7 @@ PrecioSinIGV = PrecioBase
 - El sistema debe almacenar todos los comprobantes y cotizaciones en formato PDF y XML.
 - El sistema debe permitir la descarga y el envío automático por correo electrónico al cliente.
 ### 6. Registro de condiciones de pago
-- El sistema debe permitir registrar las condiciones de pago:
+- El sistema debe permitir registrar las condiciones de pago siguientes:
    - Contado
    - Crédito
    - Adelanto (50%)
@@ -46,7 +46,7 @@ MontoAdelanto = MontoTotal * 0.5
 MontoPendiente = MontoTotal - MontoAdelanto
 ```
 ### 7. Registro de datos de traslado
-- El sistema debe registrar información logística para los envíos:
+- El sistema debe registrar información logística para los envíos como los siguientes datos:
    - Origen/destino
    - Vehículo y placa
    - Nombre y DNI del conductor
