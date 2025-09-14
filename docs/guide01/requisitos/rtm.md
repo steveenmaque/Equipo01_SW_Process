@@ -68,7 +68,7 @@ Ello implica el desarrollo de los siguientes puntos:
 - **Rendimiento:** El sistema debe generar cotizaciones y comprobantes en un tiempo no mayor a un minuto.
 - **Disponibilidad:** La aplicación debe encontrarse operativa durante la jornada laboral (8:00 a. m. – 6:00 p. m.) y, en caso de fallas, debe recuperarse en un plazo máximo de 4 horas.
 - **Cumplimiento normativo:** El software debe ajustarse a las disposiciones de la SUNAT para la emisión de comprobantes electrónicos (XML, CDR, PDF con QR) y mantenerse compatible con futuros proveedores autorizados (PSE/OSE).
-
+------------------------------------------------------
 - Portabilidad del software
 - Facilidad de mantenimiento: Que implica el grado de conocimiento de la herramienta de desarrollo del software, así como de la disponibilidad de personal técnico apropiado entre otros.
 - Usabilidad del software
