@@ -60,8 +60,15 @@ Ello implica el desarrollo de los siguientes puntos:
 - Formato de interfaz de usuario y GUI como parte de la capa de presentación (Front End) del aplicativo de software: Incluye la interfaz de usuario para el sistema como propuesta inicial a las necesidades
   del cliente. Deberá incluirlo en el Anexo “A”. Este escenario es factible cuando los requisitos no se encuentran definidos desde la perspectiva del usuario o existe dificultad para su obtención y entendimiento.
   Puede utilizar cualquier herramienta mockup libre para diseñar sus interfaces: https://careerfoundry.com/en/blog/ux-design/free-wireframing-tools/
-  
+------------------------------------------------------
 ## Requisitos no funcionales
+- **Portabilidad:** El sistema debe poder instalarse y ejecutarse en computadoras de escritorio que utilicen sistemas operativos comunes, principalmente Windows.
+- **Mantenibilidad:** La aplicación debe desarrollarse con herramientas y lenguajes ampliamente conocidos, además de contar con documentación técnica que facilite futuras actualizaciones o correcciones.
+- **Usabilidad:** La interfaz debe ser sencilla e intuitiva, de manera que pueda ser utilizada sin dificultad por el personal administrativo de la empresa.
+- **Rendimiento:** El sistema debe generar cotizaciones y comprobantes en un tiempo no mayor a un minuto.
+- **Disponibilidad:** La aplicación debe encontrarse operativa durante la jornada laboral (8:00 a. m. – 6:00 p. m.) y, en caso de fallas, debe recuperarse en un plazo máximo de 4 horas.
+- **Cumplimiento normativo:** El software debe ajustarse a las disposiciones de la SUNAT para la emisión de comprobantes electrónicos (XML, CDR, PDF con QR) y mantenerse compatible con futuros proveedores autorizados (PSE/OSE).
+
 - Portabilidad del software
 - Facilidad de mantenimiento: Que implica el grado de conocimiento de la herramienta de desarrollo del software, así como de la disponibilidad de personal técnico apropiado entre otros.
 - Usabilidad del software
