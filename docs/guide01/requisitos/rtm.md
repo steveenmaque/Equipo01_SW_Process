@@ -38,19 +38,19 @@ PrecioSinIGV = PrecioBase
 - El sistema debe permitir la descarga y el envío automático por correo electrónico al cliente.
 ### 6. Registro de condiciones de pago
 - El sistema debe permitir registrar las condiciones de pago:
- - Contado
- - Crédito
- - Adelanto (50%)
+   - Contado
+   - Crédito
+   - Adelanto (50%)
 ```
 MontoAdelanto = MontoTotal * 0.5
 MontoPendiente = MontoTotal - MontoAdelanto
 ```
 ### 7. Registro de datos de traslado
 - El sistema debe registrar información logística para los envíos:
- - Origen/destino
- - Vehículo y placa
- - Nombre y DNI del conductor
- - Peso y volumen de los inflables transportados
+   - Origen/destino
+   - Vehículo y placa
+   - Nombre y DNI del conductor
+   - Peso y volumen de los inflables transportados
 
 ---------------------------------------------------------
 Los requisitos funcionales se expresan en lenguaje técnico a partir de los requisitos funcionales mandatorios que se han identificado en la categorización de requisitos de usuario.
