@@ -36,16 +36,7 @@ PrecioSinIGV = PrecioBase
 ### 5. Almacenamiento y envío de documentos electrónicos
 - El sistema debe almacenar todos los comprobantes y cotizaciones en formato PDF y XML.
 - El sistema debe permitir la descarga y el envío automático por correo electrónico al cliente.
-### 6. Registro de condiciones de pago
-- El sistema debe permitir registrar las condiciones de pago siguientes:
-   - Contado
-   - Crédito
-   - Adelanto (50%)
-```
-MontoAdelanto = MontoTotal * 0.5
-MontoPendiente = MontoTotal - MontoAdelanto
-```
-### 7. Registro de datos de traslado
+### 6. Registro de datos de traslado
 - El sistema debe registrar información logística para los envíos como los siguientes datos:
    - Origen/destino
    - Vehículo y placa
