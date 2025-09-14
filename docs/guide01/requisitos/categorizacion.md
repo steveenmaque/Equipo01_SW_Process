@@ -1,13 +1,22 @@
 # Categorización lógica de requisitos (Organización de los requisitos de usuario)
 
 ## Requisitos funcionales mandatorios
-Representa los requisitos que debe soportar el software es decir que el software sin ellos no funciona.
+- El sistema debe permitir registrar clientes con RUC, razón social, dirección y datos de contacto.
+- El sistema debe permitir generar cotizaciones numeradas correlativamente con fecha automática.
+- El sistema debe emitir facturas, boletas, notas de crédito y débito electrónicas validadas con SUNAT.
+- El sistema debe permitir generar guías de remisión remitente vinculadas a ventas.
+- El sistema debe almacenar y permitir la descarga/envío de PDF y XML con código QR.
+- El sistema debe registrar condiciones de pago (contado, crédito, adelanto 50%).
+- El sistema debe registrar datos de traslado (origen/destino, vehículo, conductor, peso/volumen).
 
 ## Requisitos funcionales de mejora
-Representan una mejora a las funcionalidades mandatorias del software.
+- Validación automática de errores en descripción/unidades de medida.
+- Generación de reportes mensuales de ventas y facturación.
+- Menú de opciones para productos más comerciales.
 
 ## Requisitos funcionales que no generan valor a la organización
-Representan los requisitos que no se corresponden con ningún objetivo del software menos de la organización.
+- Configurar precios con promociones/descuentos especiales.
+- Configurar clientes frecuentes.
 
 # Tips para mayor claridad:
 ## Propósito
