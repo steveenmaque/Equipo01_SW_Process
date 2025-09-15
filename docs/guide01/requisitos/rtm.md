@@ -1,4 +1,4 @@
-# Especificación de requisitos de software
+# Especificación de requisitos de software (poner en infinitivo)
 
 ## Requisitos funcionales
 Los requisitos funcionales se expresan en lenguaje técnico a partir de los requisitos mandatorios identificados en la entrevista con el cliente.
