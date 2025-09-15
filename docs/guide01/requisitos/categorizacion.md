@@ -6,7 +6,7 @@
 - El sistema debe emitir facturas, boletas, notas de crédito y débito electrónicas validadas con SUNAT.
 - El sistema debe permitir generar guías de remisión remitente vinculadas a ventas.
 - El sistema debe almacenar y permitir la descarga/envío de PDF y XML con código QR.
-- El sistema debe registrar condiciones de pago (contado, crédito, adelanto 50%).
+- El sistema debe registrar condiciones de pago (contado o crédito).
 - El sistema debe registrar datos de traslado (origen/destino, vehículo, conductor, peso/volumen).
 
 ## Requisitos funcionales de mejora
