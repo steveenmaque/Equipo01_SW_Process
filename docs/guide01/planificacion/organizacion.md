@@ -6,12 +6,11 @@ Se define el ED, sus miembros y los roles en el equipo.
 - **Equipo de desarrollo**:
   - *Desarrollador A*: módulo backend.
   - *Desarrollador B*: módulo frontend.
-- **Responsable de pruebas**: define y ejecuta los casos de prueba.
 
 
 | Rol | Nombre | Responsabilidades |
 |-----|--------|-------------------|
 | Jefe de Proyecto | Alumno 1 | Coordinar tareas, comunicación con docente |
-| Desarrollador | Alumno 2 | Programación backend |
+| Analista de requisitos | Alumno 2 | Calidad de los requisitos de usuario |
 | Desarrollador | Alumno 3 | Programación frontend |
-| Tester | Alumno 4 | Diseño y ejecución de pruebas |
+| Desarrollador | Alumno 4 | Programación backend |
