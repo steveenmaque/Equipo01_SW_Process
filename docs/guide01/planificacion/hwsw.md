@@ -1,7 +1,6 @@
 # Requisitos de Hardware y Software
-Para el desarrollo del sistema, se necesitarán los siguientes recursos técnicos
+Para el desarrollo del sistema, se necesitarán los siguientes recursos técnicos.
 
-# Ejemplo
 ## Hardware
 - PC con mínimo 8 GB RAM y procesador i5 o superior
 - Conexión a Internet estable (5 Mbps)
