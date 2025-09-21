@@ -1,5 +1,5 @@
 # Requisitos de Hardware y Software
-Recursos técnicos que se utilizarán para su desarrollo. Especifica las características técnicas del hardware y del software de soporte asignado a las actividades de desarrollo.
+Para el desarrollo del sistema, se necesitarán los siguientes recursos técnicos
 
 # Ejemplo
 ## Hardware
