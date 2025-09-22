@@ -17,10 +17,3 @@
 ## Requisitos funcionales que no generan valor a la organización
 - Configurar precios con promociones/descuentos especiales.
 - Configurar clientes frecuentes.
-
-# Tips para mayor claridad:
-## Propósito
-Categorizar los requisitos de usuario.
-
-## Qué se espera
-Tener los requisitos de usuario debidamente categorizados.
