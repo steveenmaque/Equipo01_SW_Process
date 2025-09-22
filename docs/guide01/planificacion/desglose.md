@@ -1,5 +1,5 @@
 # Desglose del Trabajo (WBS)
-Una estructura de desglose de trabajo (EDT), también conocida por WBS (Work Breakdown Structure) por sus siglas en inglés, es la descomposición de un proyecto que está organizado en varios niveles.
+El proyecto se desglosa en las siguientes actividades y entregables:
 1. Fase de Planificación
    - Planificación del proyecto
 2. Análisis de requisitos
