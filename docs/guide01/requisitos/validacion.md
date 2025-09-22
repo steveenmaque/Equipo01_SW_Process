@@ -1,8 +1,8 @@
 # Validación de requisitos de software
-Esta actividad se realiza al final del análisis de requisitos. Resultado de la negociación y discusión de los requisitos con el cliente. Los requisitos se pueden verificar respecto a las siguientes consideraciones:
+La validación de requisitos se realizó al finalizar la fase de análisis, se consideró la negociación con el cliente y la revisión de factibilidad técnica por parte del equipo de desarrollo.
 
-- Si el requisito del cliente contrapone las buenas prácticas de la organización.
-- Si son válidos según la funcionalidad, la contribución a los objetivos de la organización y el dominio del software.
+- Los requisitos definidos no contraponen las buenas prácticas de la organización, ya que se alinean con los procesos estándar de facturación electrónica y normativas de SUNAT.
+- Los requisitos son válidos en cuanto a su funcionalidad y van de acuerdo los objetivos del negocio: agilizar cotizaciones, asegurar la emisión de comprobantes electrónicos válidos y optimizar la gestión de envíos.
 - Si existen algunas restricciones por tiempo, costo, experiencia en desarrollo.
 - Si el equipo de desarrollo interpretó correctamente los requisitos.
 
