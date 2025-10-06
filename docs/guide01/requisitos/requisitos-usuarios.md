@@ -19,4 +19,5 @@ Para la recopilación de requisitos del sistema se aplicó la técnica de entrev
 - La entrevista se realizó de forma virtual mediante Google Meet, donde los integrantes del equipo fueron formulando las preguntas y registrando las respuestas en notas compartidas.
 
 [Ver entrevista en Documentos de Google](https://docs.google.com/document/d/1c_yK5jc14I3tKbvmTM3_SAa9zemh8F0Enc9quWXYWGM/edit?usp=sharing)
+
 [Ver entrevista grabada](https://drive.google.com/file/d/1tndvioI38LfDZ8t3m68p3_i6F33AmoRW/view?usp=sharing)
