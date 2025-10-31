@@ -1,0 +1,7 @@
+# Metodología:
+
+Para el presente proyecto de fin de curso de “Procesos de software” se tomó en consideración trabajar en equipos de trabajo conformados por 4 alumnos como máximo. El desarrollo del trabajo será en forma colaborativa y de acuerdo con las habilidades de cada alumno que conforma el grupo como equipo de desarrollo considerando además el trabajo de investigación que realizarán dado que los alumnos se encuentran en proceso de formación profesional y con escaza experiencia en programación de proyectos de software, sin dejar de considerar que no han llevado aún cursos de base de datos por lo que se eligió la metodología en espiral que permita a los equipos de desarrollo ganar experiencia debido a la transición y flexibilidad de cada iteración durante el desarrollo del ciclo de vida del software (Solano-Fernández y Porras-Alfaro, 2020) además de representar un paradigma que se puede aplicar en situaciones desfavorables tal como lo describe y explica Lemus, C. R.,  et al. (2022).
+
+## Referencias bibliográficas:
+- Fernández, E. S., & Alfaro, D. P. (2020). El modelo iterativo e incremental para el desarrollo de la aplicación de realidad aumentada Amón_RA. Tecnología en marcha, 33(8), 165-177.
+- Lemus, C. R., Aguilar, E. E. F., Castro, M. D. S. R., Ramírez, B. C. L., & Bedolla, M. G. L. (2022). APLICACIÓN DEL MODELO EN ESPIRAL PARA DESARROLLO DE PROTOTIPO DE PÁGINA WEB DURANTE LA PANDEMIA DE COVID-19 (APPLICATION OF THE SPIRAL MODEL FOR THE DEVELOPMENT OF A WEBSITE PROTOTYPE DURING THE COVID-19 PANDEMIC). Pistas Educativas, 43(141).
