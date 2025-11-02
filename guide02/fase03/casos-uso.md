@@ -5,7 +5,7 @@ A continuación, se presenta el diagrama de casos de uso del sistema propuesto, 
 ![Diagrama de Casos de Uso](../imagenes/DiagramaCasosdeUso2.jpeg)
 
 ---
-A continuación, se documentan los casos de uso identificados en el sistema.
+En esta sección se presenta la descripción detallada de los casos de uso que conforman el sistema.
 
 ## CU-01: Validar RUC
 
