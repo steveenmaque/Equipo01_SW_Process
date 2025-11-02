@@ -1,5 +1,7 @@
 ## Diagrama de casos de uso
 
+A continuación, se presenta el diagrama de casos de uso del sistema propuesto, el cual representa las principales interacciones entre los actores y las funcionalidades del software.
+
 ![Diagrama de Casos de Uso](../imagenes/DiagramaCasosdeUso.png)
 
 ---
