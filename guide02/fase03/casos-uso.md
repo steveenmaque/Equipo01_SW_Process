@@ -4,9 +4,8 @@
 
 ## CU-01: Validar RUC
 
-| Caso de uso: Validar RUC |
-|---------------------|
-| **ID** | CU-01 |
+| **Título** | Caso de uso: Validar RUC |
+| **ID** | CU_01 |
 | **Descripción** | Verifica que el RUC del cliente tenga 11 dígitos y sea único en la base de datos. |
 | **Actor** | Sistema (automático) |
 | **Precondición** | Se ha ingresado un RUC para validar. |
