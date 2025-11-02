@@ -9,8 +9,3 @@ A continuación, se presenta el Diagrama de procesos que describen el flujo oper
 ![Diagrama de cotización](../imagenes/InfleSusVentas_VentayFacturacion.jpg)
 
 ![Diagrama de cotización](../imagenes/InfleSusVentas_Traslado.jpg)
-
-Diagrama de procesos del negocio del prototipo de software. Para ello utilizaran la herramienta Bizagi Modeler.
-
-- Deberán subir la(s) imágenes de los diagramas en formato .png, .jpg
-- Se recomienda utilizar resolución de 300 dpi para cada imagen.
