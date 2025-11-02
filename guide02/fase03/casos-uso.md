@@ -169,12 +169,3 @@ En esta sección se presenta la descripción detallada de los casos de uso que c
 | **Poscondición** | Documento enviado al email del cliente. |
 | **Flujo Principal** | 1. Sistema obtiene email del cliente<br>2. Sistema adjunta documento PDF<br>3. Sistema genera cuerpo del email<br>4. Sistema envía email al cliente<br>5. Sistema registra envío exitoso |
 | **Reglas de Negocio** | **RN39:** El cliente debe tener email registrado<br>**RN40:** Se envía automáticamente tras generar cotización<br>**RN41:** Se envía automáticamente tras emitir comprobante<br>**RN42:** Se adjunta el documento en formato PDF |
-
----
-
-Diagramas y documentación de cada uno de los casos de uso. Con respecto a la documentación de los casos de uso, incluirán lo siguiente:
-- Además de los datos del encabezado del CU, incluirán flujo principal y reglas de negocio como mínimo.
-- Usar la herramienta gráfica de su preferencia
-- Mantener la notación UML de los casos de uso (relaciones include y exclude)
-- Subir las imagenes en formato .png, .jpg.
-- Resolución de 300 dpi para cada imagen.
