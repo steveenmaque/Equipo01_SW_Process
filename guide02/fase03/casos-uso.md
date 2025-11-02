@@ -2,6 +2,8 @@
 
 ![Diagrama de Casos de Uso](../imagenes/DiagramaCasosdeUso.png)
 
+---
+
 ## CU-01: Validar RUC
 
 | Campo | Descripción |
@@ -41,9 +43,9 @@
 | **Descripción** | Registra una venta aprobada por el cliente en el sistema. |
 | **Actor** | Administrador |
 | **Precondición** | Existe una cotización aprobada por el cliente<br>El cliente está registrado en el sistema |
-| **Poscondición** | Venta registrada y lista para facturación. |
-| **Flujo Principal** | 1. Administrador selecciona cotización aprobada<br>2. Administrador ingresa datos de la venta<br>3. Sistema genera número de orden de compra (OC)<br>4. Sistema almacena la venta<br>5. Sistema confirma registro exitoso |
-| **Reglas de Negocio** | **RN05:** Debe existir una cotización previa<br>**RN06:** La venta debe estar asociada a un cliente registrado<br>**RN07:** Se genera automáticamente un número de OC |
+| **Poscondición** | Venta registrada y lista para emitir comprobante. |
+| **Flujo Principal** | 1. Administrador selecciona cotización aprobada<br>2. Administrador ingresa datos de la venta<br>3. Sistema genera número de orden de compra.<br>4. Sistema almacena la venta<br>5. Sistema confirma registro exitoso |
+| **Reglas de Negocio** | **RN05:** Debe existir una cotización previa<br>**RN06:** La venta debe estar asociada a un cliente registrado<br>**RN07:** Se genera automáticamente un número de orden de compra.|
 
 ---
 
@@ -57,12 +59,12 @@
 | **Actor** | Administrador |
 | **Precondición** | Existe una venta registrada (CU-03). |
 | **Poscondición** | Comprobante generado en XML y PDF<br>Comprobante validado por SUNAT<br>Comprobante enviado al cliente por email |
-| **Flujo Principal** | 1. Administrador selecciona venta a facturar<br>2. Administrador selecciona tipo de comprobante (factura/boleta)<br>3. Sistema genera archivo XML del comprobante<br>4. Sistema genera archivo PDF con código QR y logo<br>5. Sistema valida comprobante con SUNAT (incluye CU-08)<br>6. Sistema almacena comprobante<br>7. Sistema envía comprobante por email (incluye CU-11) |
+| **Flujo Principal** | 1. Administrador selecciona venta a facturar<br>2. Administrador selecciona tipo de comprobante (factura/boleta)<br>3. Sistema genera archivo XML del comprobante<br>4. Sistema genera archivo PDF con código QR.<br>5. Sistema valida comprobante con SUNAT (incluye CU-08)<br>6. Sistema almacena comprobante<br>7. Sistema envía comprobante por email al cliente.(incluye CU-11) |
 | **Reglas de Negocio** | **RN08:** Debe incluir código QR<br>**RN09:** Debe incluir logo de la empresa<br>**RN10:** Debe incluir datos obligatorios de SUNAT<br>**RN11:** Debe validarse con SUNAT antes de ser válido<br>**RN12:** Se debe enviar automáticamente por email al cliente |
 
 ---
 
-## CU-05: Generar GRE
+## CU-05: Generar guía de remisión
 
 | Campo | Descripción |
 |-------|-------------|
@@ -72,7 +74,7 @@
 | **Actor** | Administrador |
 | **Precondición** | Existe una venta registrada<br>Existen datos de traslado registrados |
 | **Poscondición** | GRE generada y almacenada en el sistema. |
-| **Flujo Principal** | 1. Administrador selecciona orden de compra<br>2. Sistema registra datos de traslado (incluye CU-07)<br>3. Sistema genera GRE en formato XML y PDF<br>4. Sistema asocia GRE con número de OC<br>5. Sistema almacena GRE<br>6. Sistema confirma generación exitosa |
+| **Flujo Principal** | 1. Administrador selecciona orden de compra<br>2. Sistema registra datos de traslado (incluye CU-07)<br>3. Sistema genera GRE en formato XML y PDF<br>4. Sistema asocia GRE con número de orden de compra<br>5. Sistema almacena GRE<br>6. Sistema confirma generación exitosa |
 | **Reglas de Negocio** | **RN13:** Debe estar asociada a una orden de compra<br>**RN14:** Debe incluir origen y destino<br>**RN15:** Debe incluir fecha de traslado<br>**RN16:** Debe incluir datos del vehículo y placa<br>**RN17:** Debe incluir nombre y DNI del conductor<br>**RN18:** Debe incluir peso y volumen de la carga |
 
 ---
@@ -85,7 +87,7 @@
 | **ID** | CU-06 |
 | **Descripción** | Calcula el precio con o sin IGV según selección del usuario. |
 | **Actor** | Sistema (automático) |
-| **Precondición** | Se ha seleccionado un producto o servicio con precio base. |
+| **Precondición** | Se ha seleccionado un producto o servicio con precio base, previamente cotizado. |
 | **Poscondición** | Precios calculados y mostrados. |
 | **Flujo Principal** | 1. Sistema recibe precio base<br>2. Sistema verifica selección del usuario (con/sin IGV)<br>3. Si "con IGV": Sistema calcula PrecioConIGV = PrecioBase × 1.18<br>4. Si "sin IGV": Sistema muestra PrecioSinIGV = PrecioBase<br>5. Sistema retorna precio calculado |
 | **Reglas de Negocio** | **RN19:** IGV es 18%<br>**RN20:** Fórmula con IGV: PrecioBase × 1.18<br>**RN21:** Fórmula sin IGV: PrecioBase |
@@ -146,8 +148,8 @@
 | **Descripción** | Genera una nota de crédito para corregir o ajustar un comprobante previamente emitido. |
 | **Actor** | Administrador |
 | **Precondición** | Existe un comprobante electrónico emitido<br>Cliente ha solicitado ajuste o corrección |
-| **Poscondición** | Nota de crédito generada y validada<br>Comprobante original ajustado |
-| **Flujo Principal** | 1. Administrador selecciona comprobante a corregir<br>2. Administrador ingresa motivo de la nota de crédito<br>3. Administrador ingresa montos a ajustar<br>4. Sistema genera nota de crédito en XML y PDF<br>5. Sistema valida con SUNAT (incluye CU-08)<br>6. Sistema almacena nota de crédito<br>7. Sistema asocia con comprobante original<br>8. Sistema confirma generación exitosa |
+| **Poscondición** | Nota de crédito generada y validada<br>Generación de un nuevo comprobante de pago |
+| **Flujo Principal** | 1. Administrador selecciona comprobante a corregir<br>2. Administrador ingresa motivo de la nota de crédito<br>3. Administrador ingresa montos u otros datos a ajustar<br>4. Sistema genera nota de crédito en XML y PDF<br>5. Sistema valida con SUNAT (incluye CU-08)<br>6. Sistema almacena nota de crédito<br>7. Sistema asocia con comprobante original<br>8. Sistema confirma generación exitosa |
 | **Reglas de Negocio** | **RN35:** Debe estar asociada a un comprobante original<br>**RN36:** Debe incluir motivo de emisión<br>**RN37:** Debe validarse con SUNAT<br>**RN38:** Solo se genera cuando el cliente reporta errores |
 
 ---
