@@ -35,7 +35,7 @@ PrecioSinIGV = PrecioBase
 
 - Emitir facturas, boletas, notas de crédito y débito en formato electrónico (XML y PDF).
 - Incluir el código QR, logo de la empresa y datos de SUNAT obligatorios.
-- Conectarse a SUNAT para validar cada comprobante en línea y almacenar el CDR de aceptación o rechazo.
+- Conectarse a SUNAT para validar cada comprobante en línea.
 
 ### 4. Generación de guías de remisión remitente (GRE)
 
