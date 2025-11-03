@@ -1,23 +1,15 @@
-<img width="1379" height="831" alt="Patrón" src="https://github.com/user-attachments/assets/4b2b7eb5-9021-41d6-bae4-728e3ef81b14" />
+<img width="1600" height="751" alt="Patrón" src="https://github.com/user-attachments/assets/4d9718de-6ebc-454d-aca0-754569ac8026" />
 
 
 ## Patrón de software
-El patrón seleccionado es el de **Monolito basado en capas**
+El patrón seleccionado es el **MVC**
 
-Se eligió el patrón de arquitectura monolítica porque el sistema se ejecutará localmente en una sola aplicación de escritorio, lo que simplifica su implementación, mantenimiento y control, al concentrar toda la lógica de negocio en un único proceso sin depender de servicios externos, salvo la conexión con la API de SUNAT. La estructura se compone de una capa de presentación y una capa de negocio: la primera representa la interfaz del usuario, desde donde se registran clientes, generan cotizaciones, confirman órdenes de compra y emiten documentos; mientras que la capa de negocio agrupa los módulos que ejecutan las reglas y flujos del proceso, incluyendo el registro y verificación de clientes (RUC), la gestión de cotizaciones, órdenes de compra, registro de ventas, emisión de comprobantes electrónicos, notas de crédito o débito, generación de guías de remisión y almacenamiento de archivos PDF y XML locales. El sistema genera los comprobantes en formato XML conforme al estándar UBL, los firma digitalmente y los envía a la SUNAT, que devuelve un XML de respuesta (CDR) con el resultado de la validación; si el comprobante es aceptado, se genera su representación en PDF, y si es rechazado, se emite una nota de crédito o débito referenciada al documento original. Finalmente, los módulos de negocio se comunican internamente de manera directa dentro del mismo ejecutable, garantizando coherencia transaccional, rapidez de respuesta y simplicidad operativa, mientras la interacción con la SUNAT se limita al intercambio de XML y CDR como validación oficial de los documentos emitidos.
+El sistema sigue el patrón MVC (Modelo-Vista-Controlador), donde Angular se utiliza para la Vista, proporcionando la interfaz de usuario para que el cliente pueda interactuar con el sistema, como generar cotizaciones, realizar compras o emitir comprobantes. La Vista captura las interacciones del usuario y las envía al Controlador. El Controlador en Spring Boot gestiona la lógica de las solicitudes, orquestando las operaciones del modelo, como la gestión de cotizaciones, órdenes de compra, emisión de comprobantes y la generación de notas de crédito/débito. El controlador también se encarga de interactuar con la API de SUNAT para validar los comprobantes electrónicos y gestionar las respuestas. El Modelo está compuesto por los servicios que implementan la lógica de negocio, sin necesidad de persistencia en base de datos, ya que toda la gestión se realiza mediante la validación de documentos y generación de archivos locales (como XML y PDF). Esta estructura asegura una clara separación de responsabilidades, donde Spring Boot maneja el backend y la comunicación con SUNAT, mientras que Angular se encarga del frontend y de la interacción directa con el usuario.
 
-**Registro y verificación de clientes (RUC):** permite ingresar los datos del cliente y validar que el RUC tenga 11 dígitos y no esté duplicado.
+**Gestión de Cotizaciones :** Este módulo se encarga de crear y gestionar las cotizaciones, calculando los precios con o sin IGV y generando el documento correspondiente en formato XML y PDF.
 
-**Gestión de cotizaciones:** genera cotizaciones numeradas de forma correlativa, calcula precios con o sin IGV y prepara el documento para ser enviado al cliente.
+**Gestión de Órdenes de Compra :** Una vez que el cliente acepta la cotización, este módulo registra la orden de compra, vinculándola a la cotización y gestionando los datos relevantes para la transacción.
 
-**Gestión de órdenes de compra:** se activa cuando el cliente acepta la cotización, registrando la orden de compra con su número y condiciones de pago.
+**Emisión de Comprobantes :** Se encarga de generar los comprobantes electrónicos (facturas o boletas) en formato XML, firmarlos digitalmente y enviarlos a la API SUNAT para su validación. También genera los documentos en formato PDF para ser entregados al cliente.
 
-**Registro de ventas y credenciales:** registra la venta confirmada y administra las credenciales (RUC, usuario SOL, clave SOL y certificado digital) necesarias para conectarse con la SUNAT.
-
-**Emisión de comprobantes (XML/PDF):** genera el comprobante electrónico (factura o boleta), lo firma digitalmente, lo envía a SUNAT y procesa el XML de respuesta (CDR) para confirmar su validez.
-
-**Notas de crédito/débito:** emite documentos que corrigen o anulan comprobantes anteriores, siguiendo el mismo proceso de validación ante SUNAT.
-
-**Generación de guías de remisión:** crea las guías de traslado de productos asociadas a una venta, con los datos de origen, destino, vehículo y conductor.
-
-**Gestión de archivos (PDF/XML locales):** almacena de forma ordenada los comprobantes, notas, guías y los CDR de SUNAT, junto con sus versiones en PDF para consulta o envío al cliente.
+**Generación de Notas de Crédito/Débito :** Este módulo permite la emisión de notas de crédito o débito en caso de que un comprobante sea rechazado por SUNAT o necesite ser corregido por algún error en la transacción. También se valida con SUNAT y se genera el PDF correspondiente.
