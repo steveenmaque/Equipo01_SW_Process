@@ -10,7 +10,7 @@ Los requisitos funcionales se expresan en lenguaje técnico a partir de los requ
     - RUC
     - Razón social
     - Datos personales
-- Validar que el RUC tenga 11 dígitos y sea único en la base de datos.
+- Validar que el RUC tenga 11 dígitos y sea único.
 
 ### 2. Generación de cotizaciones
 
@@ -37,7 +37,7 @@ PrecioSinIGV = PrecioBase
 - Incluir el código QR, logo de la empresa y datos de SUNAT obligatorios.
 - Conectarse a SUNAT para validar cada comprobante en línea.
 
-### 4. Generación de guías de remisión remitente (GRE)
+### 4. Generación de guías de remisión (GRE)
 
 - Permitir generar GRE asociadas al número de orden de compra (OC).
 - Los campos obligatorios son los siguientes:
