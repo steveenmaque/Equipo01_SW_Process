@@ -1,26 +1,23 @@
-<img width="1869" height="566" alt="Patrón" src="https://github.com/user-attachments/assets/9d78c79b-8a3c-4532-ae81-3da2cb515ab5" />
+<img width="1379" height="831" alt="Patrón" src="https://github.com/user-attachments/assets/4b2b7eb5-9021-41d6-bae4-728e3ef81b14" />
 
 
 ## Patrón de software
-El patrón seleccionado es el de **Microservicios.**
+El patrón seleccionado es el de **Monolito basado en capas**
 
-### Componentes Principales del Sistema
-**API Gateway:** Actúa como la puerta de entrada única. Gestiona la autenticación y distribuye las solicitudes a los servicios correspondientes.
+Se eligió el patrón de arquitectura monolítica porque el sistema se ejecutará localmente en una sola aplicación de escritorio, lo que simplifica su implementación, mantenimiento y control, al concentrar toda la lógica de negocio en un único proceso sin depender de servicios externos, salvo la conexión con la API de SUNAT. La estructura se compone de una capa de presentación y una capa de negocio: la primera representa la interfaz del usuario, desde donde se registran clientes, generan cotizaciones, confirman órdenes de compra y emiten documentos; mientras que la capa de negocio agrupa los módulos que ejecutan las reglas y flujos del proceso, incluyendo el registro y verificación de clientes (RUC), la gestión de cotizaciones, órdenes de compra, registro de ventas, emisión de comprobantes electrónicos, notas de crédito o débito, generación de guías de remisión y almacenamiento de archivos PDF y XML locales. El sistema genera los comprobantes en formato XML conforme al estándar UBL, los firma digitalmente y los envía a la SUNAT, que devuelve un XML de respuesta (CDR) con el resultado de la validación; si el comprobante es aceptado, se genera su representación en PDF, y si es rechazado, se emite una nota de crédito o débito referenciada al documento original. Finalmente, los módulos de negocio se comunican internamente de manera directa dentro del mismo ejecutable, garantizando coherencia transaccional, rapidez de respuesta y simplicidad operativa, mientras la interacción con la SUNAT se limita al intercambio de XML y CDR como validación oficial de los documentos emitidos.
 
-**Microservicio de Clientes:** Administra el registro, validación y mantenimiento de los datos de empresas o personas, garantizando la unicidad y corrección del RUC.
+**Registro y verificación de clientes (RUC):** permite ingresar los datos del cliente y validar que el RUC tenga 11 dígitos y no esté duplicado.
 
-**Microservicio de Cotizaciones:** Genera los presupuestos (cálculo de montos, condiciones, vigencia) y permite exportarlos a PDF.
+**Gestión de cotizaciones:** genera cotizaciones numeradas de forma correlativa, calcula precios con o sin IGV y prepara el documento para ser enviado al cliente.
 
-**Microservicio de Comprobantes Electrónicos:** Emite facturas, boletas y notas de crédito/débito. Genera los XML/PDF y se conecta con la **SUNAT** para la validación y almacenamiento del CDR (Constancia de Recepción).
+**Gestión de órdenes de compra:** se activa cuando el cliente acepta la cotización, registrando la orden de compra con su número y condiciones de pago.
 
-**Microservicio de Guías de Remisión:** Crea los documentos de traslado exigidos por la SUNAT, registrando datos de origen, destino, vehículo y conductor.
+**Registro de ventas y credenciales:** registra la venta confirmada y administra las credenciales (RUC, usuario SOL, clave SOL y certificado digital) necesarias para conectarse con la SUNAT.
 
-**Pedidos (Orden de Compra):** Registra y gestiona las órdenes de compra (OC), sirviendo de enlace entre cotizaciones y comprobantes.
+**Emisión de comprobantes (XML/PDF):** genera el comprobante electrónico (factura o boleta), lo firma digitalmente, lo envía a SUNAT y procesa el XML de respuesta (CDR) para confirmar su validez.
 
-**Microservicio de Logística:** Gestiona la parte operativa del transporte, incluyendo vehículos, rutas, estados de envío y trazabilidad.
+**Notas de crédito/débito:** emite documentos que corrigen o anulan comprobantes anteriores, siguiendo el mismo proceso de validación ante SUNAT.
 
-**Microservicio de Documentos y Notificaciones:** Almacena localmente todos los documentos (XML/PDF) y maneja el envío automático por correo electrónico a los clientes.
+**Generación de guías de remisión:** crea las guías de traslado de productos asociadas a una venta, con los datos de origen, destino, vehículo y conductor.
 
-**Event Bus (Mensajería):** Es el sistema de comunicación asíncrona. Permite que los microservicios publiquen y se suscriban a eventos (ej. "cotización creada") sin depender directamente uno del otro.
-
-El API Gateway direcciona las solicitudes del usuario hacia los microservicios correspondientes, garantizando un acceso seguro y controlado. El servicio de Clientes gestiona la información de las empresas y valida el RUC, mientras que Cotizaciones genera propuestas comerciales con cálculos de IGV y vigencia. Cuando el cliente confirma una compra, el Microservicio de Pedidos registra la Orden de Compra (OC), vinculándola con la cotización y sirviendo de puente hacia la emisión del comprobante electrónico y la guía de remisión. El Microservicio de Comprobantes Electrónicos se encarga de generar los archivos XML y PDF, conectarse con la SUNAT para su validación y almacenar el CDR correspondiente. El servicio de Guías de Remisión documenta los traslados de mercancía y se coordina con Logística, que controla los vehículos, conductores y rutas. Finalmente, Documentos y Notificaciones gestiona el almacenamiento local y el envío de los documentos por correo electrónico. Todos los servicios interactúan mediante un Event Bus, garantizando independencia, resiliencia y escalabilidad en toda la solución.
+**Gestión de archivos (PDF/XML locales):** almacena de forma ordenada los comprobantes, notas, guías y los CDR de SUNAT, junto con sus versiones en PDF para consulta o envío al cliente.
