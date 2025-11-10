@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.view.cotizacion;
+package com.inflesusventas.view.cotizacion;
 
 public class CotizacionListView {
     

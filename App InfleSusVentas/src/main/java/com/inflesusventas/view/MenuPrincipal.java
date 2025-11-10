@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.view;
+package com.inflesusventas.view;
 
 public class MenuPrincipal {
     

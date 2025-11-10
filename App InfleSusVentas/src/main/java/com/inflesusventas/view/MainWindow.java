@@ -1,5 +1,301 @@
-package main.java.com.inflesusventas.view;
+package com.inflesusventas.view;
 
-public class MainWindow {
+import com.inflesusventas.controller.CotizacionController;
+import com.inflesusventas.view.cotizacion.CotizacionFormView;
+
+import javax.swing.*;
+import java.awt.*;
+
+/**
+ * Ventana principal de la aplicación Desktop
+ * Contiene el menú de navegación y el área de contenido
+ * 
+ * Ruta: src/main/java/com/inflesusventas/view/MainWindow.java
+ */
+public class MainWindow extends JFrame {
     
+    private static final Color COLOR_PRIMARIO = new Color(102, 126, 234);
+    private static final Color COLOR_MENU = new Color(52, 58, 64);
+    
+    private CotizacionController cotizacionController;
+    private JPanel panelContenido;
+    
+    public MainWindow(CotizacionController cotizacionController) {
+        this.cotizacionController = cotizacionController;
+        inicializarVentana();
+    }
+    
+    /**
+     * Inicializa la ventana principal
+     */
+    private void inicializarVentana() {
+        setTitle("InfleSusVentas - Sistema de Gestión Desktop");
+        setSize(1400, 900);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        // Icono de la aplicación (si existe)
+        try {
+            Image icon = Toolkit.getDefaultToolkit().getImage(
+                getClass().getResource("/images/icon.png"));
+            setIconImage(icon);
+        } catch (Exception e) {
+            // Icono no encontrado, continuar sin icono
+        }
+        
+        // Layout principal
+        setLayout(new BorderLayout());
+        
+        // Agregar componentes
+        add(crearBarraSuperior(), BorderLayout.NORTH);
+        add(crearMenuLateral(), BorderLayout.WEST);
+        add(crearPanelContenido(), BorderLayout.CENTER);
+        add(crearBarraInferior(), BorderLayout.SOUTH);
+    }
+    
+    /**
+     * Crea la barra superior con logo y título
+     */
+    private JPanel crearBarraSuperior() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(COLOR_PRIMARIO);
+        panel.setPreferredSize(new Dimension(0, 80));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        
+        // Logo y título
+        JPanel panelTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelTitulo.setBackground(COLOR_PRIMARIO);
+        
+        JLabel lblLogo = new JLabel("🎈");
+        lblLogo.setFont(new Font("Arial", Font.PLAIN, 40));
+        
+        JLabel lblTitulo = new JLabel("InfleSusVentas SRL");
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 28));
+        lblTitulo.setForeground(Color.BLACK);
+        
+        JLabel lblSubtitulo = new JLabel("Sistema de Gestión Desktop");
+        lblSubtitulo.setFont(new Font("Arial", Font.PLAIN, 14));
+        lblSubtitulo.setForeground(new Color(220, 220, 220));
+        
+        JPanel textos = new JPanel();
+        textos.setLayout(new BoxLayout(textos, BoxLayout.Y_AXIS));
+        textos.setBackground(COLOR_PRIMARIO);
+        textos.add(lblTitulo);
+        textos.add(lblSubtitulo);
+        
+        panelTitulo.add(lblLogo);
+        panelTitulo.add(Box.createHorizontalStrut(15));
+        panelTitulo.add(textos);
+        
+        // Información de usuario (opcional)
+        JPanel panelUsuario = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelUsuario.setBackground(COLOR_PRIMARIO);
+        
+        JLabel lblUsuario = new JLabel("Usuario: Administrador");
+        lblUsuario.setForeground(Color.BLACK);
+        lblUsuario.setFont(new Font("Arial", Font.PLAIN, 12));
+        
+        panelUsuario.add(lblUsuario);
+        
+        panel.add(panelTitulo, BorderLayout.WEST);
+        panel.add(panelUsuario, BorderLayout.EAST);
+        
+        return panel;
+    }
+    
+    /**
+     * Crea el menú lateral de navegación
+     */
+    private JPanel crearMenuLateral() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(COLOR_MENU);
+        panel.setPreferredSize(new Dimension(250, 0));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        
+        // Botones del menú
+        panel.add(crearBotonMenu("🏠 Inicio", this::mostrarInicio));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("📋 Nueva Cotización", this::mostrarCotizacion));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("👥 Clientes", this::mostrarClientes));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("🛒 Ventas", this::mostrarVentas));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("📄 Comprobantes", this::mostrarComprobantes));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("🚚 Guías de Remisión", this::mostrarGuias));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("📊 Reportes", this::mostrarReportes));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("⚙️ Configuración", this::mostrarConfiguracion));
+        
+        // Espaciador
+        panel.add(Box.createVerticalGlue());
+        
+        // Botón de salir
+        panel.add(crearBotonMenu("Salir", this::salir));
+        
+        return panel;
+    }
+    
+    /**
+     * Crea un botón del menú
+     */
+    private JButton crearBotonMenu(String texto, Runnable accion) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Arial", Font.PLAIN, 14));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(COLOR_MENU);
+        btn.setHorizontalAlignment(SwingConstants.LEFT);
+        btn.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Efecto hover
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(COLOR_PRIMARIO);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(COLOR_MENU);
+            }
+        });
+        
+        btn.addActionListener(e -> accion.run());
+        
+        return btn;
+    }
+    
+    /**
+     * Crea el panel de contenido principal
+     */
+    private JPanel crearPanelContenido() {
+        panelContenido = new JPanel(new BorderLayout());
+        panelContenido.setBackground(Color.WHITE);
+        
+        // Mostrar pantalla de inicio por defecto
+        mostrarInicio();
+        
+        return panelContenido;
+    }
+    
+    /**
+     * Crea la barra inferior con información
+     */
+    private JPanel crearBarraInferior() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(248, 249, 250));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY),
+            BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+        
+        JLabel lblEstado = new JLabel("✓ Sistema listo | Modo: Desktop | Almacenamiento: Local");
+        lblEstado.setFont(new Font("Arial", Font.PLAIN, 11));
+        
+        JLabel lblVersion = new JLabel("v1.0.0");
+        lblVersion.setFont(new Font("Arial", Font.PLAIN, 11));
+        lblVersion.setForeground(Color.BLACK);
+        
+        panel.add(lblEstado, BorderLayout.WEST);
+        panel.add(lblVersion, BorderLayout.EAST);
+        
+        return panel;
+    }
+    
+    // ==================== MÉTODOS DE NAVEGACIÓN ====================
+    
+    private void mostrarInicio() {
+        panelContenido.removeAll();
+        
+        JPanel panelInicio = new JPanel(new BorderLayout());
+        panelInicio.setBackground(Color.WHITE);
+        
+        JLabel lblBienvenida = new JLabel(
+            "<html><center>" +
+            "<h1 style='color: #667eea;'>Bienvenido a InfleSusVentas</h1>" +
+            "<p style='font-size: 14px;'>Sistema de Gestión de Cotizaciones y Comprobantes Electrónicos</p>" +
+            "<br><br>" +
+            "<p>Seleccione una opción del menú lateral para comenzar</p>" +
+            "</center></html>"
+        );
+        lblBienvenida.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        panelInicio.add(lblBienvenida, BorderLayout.CENTER);
+        
+        panelContenido.add(panelInicio);
+        panelContenido.revalidate();
+        panelContenido.repaint();
+    }
+    
+    private void mostrarCotizacion() {
+        panelContenido.removeAll();
+        panelContenido.add(new CotizacionFormView(cotizacionController));
+        panelContenido.revalidate();
+        panelContenido.repaint();
+    }
+    
+    private void mostrarClientes() {
+        mostrarEnConstruccion("Módulo de Clientes");
+    }
+    
+    private void mostrarVentas() {
+        mostrarEnConstruccion("Módulo de Ventas");
+    }
+    
+    private void mostrarComprobantes() {
+        mostrarEnConstruccion("Módulo de Comprobantes Electrónicos");
+    }
+    
+    private void mostrarGuias() {
+        mostrarEnConstruccion("Módulo de Guías de Remisión");
+    }
+    
+    private void mostrarReportes() {
+        mostrarEnConstruccion("Módulo de Reportes");
+    }
+    
+    private void mostrarConfiguracion() {
+        mostrarEnConstruccion("Módulo de Configuración");
+    }
+    
+    private void mostrarEnConstruccion(String modulo) {
+        panelContenido.removeAll();
+        
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        
+        JLabel lbl = new JLabel(
+            "<html><center>" +
+            "<h2 style='color: #667eea;'>🚧 " + modulo + "</h2>" +
+            "<p>Este módulo está en construcción</p>" +
+            "</center></html>"
+        );
+        lbl.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        panel.add(lbl, BorderLayout.CENTER);
+        
+        panelContenido.add(panel);
+        panelContenido.revalidate();
+        panelContenido.repaint();
+    }
+    
+    private void salir() {
+        int opcion = JOptionPane.showConfirmDialog(
+            this,
+            "¿Está seguro que desea salir de la aplicación?",
+            "Confirmar Salida",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        );
+        
+        if (opcion == JOptionPane.YES_OPTION) {
+            System.out.println("===========================================");
+            System.out.println("  InfleSusVentas - Sistema cerrado");
+            System.out.println("===========================================");
+            System.exit(0);
+        }
+    }
 }

@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.view.cliente;
+package com.inflesusventas.view.cliente;
 
 public class ClienteFormView {
     

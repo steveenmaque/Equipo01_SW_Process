@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.view.comprobante;
+package com.inflesusventas.view.comprobante;
 
 public class ComprobanteListView {
     

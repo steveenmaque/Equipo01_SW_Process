@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.view.components;
+package com.inflesusventas.view.components;
 
 public class SelectorCliente {
     

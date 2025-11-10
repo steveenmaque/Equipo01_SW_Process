@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.view.venta;
+package com.inflesusventas.view.venta;
 
 public class VentaListView {
     

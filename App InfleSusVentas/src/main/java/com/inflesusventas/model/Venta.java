@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.model;
+package com.inflesusventas.model;
 
 public class Venta {
     

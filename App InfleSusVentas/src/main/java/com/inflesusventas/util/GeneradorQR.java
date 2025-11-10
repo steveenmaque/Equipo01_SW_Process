@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.util;
+package com.inflesusventas.util;
 
 public class GeneradorQR {
     

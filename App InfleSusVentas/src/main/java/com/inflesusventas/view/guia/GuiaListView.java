@@ -1,4 +1,4 @@
-package main.java.com.inflesusventas.view.guia;
+package com.inflesusventas.view.guia;
 
 public class GuiaListView {
     
