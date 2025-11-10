@@ -103,7 +103,7 @@ public class CotizacionFormView extends JPanel {
         panel.setBackground(COLOR_PRIMARIO);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        JLabel lblTitulo = new JLabel("🎈 Nueva Cotización");
+        JLabel lblTitulo = new JLabel("Nueva Cotización");
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 28));
         lblTitulo.setForeground(Color.WHITE);
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
@@ -128,14 +128,14 @@ public class CotizacionFormView extends JPanel {
      * Crea sección de datos del cliente
      */
     private JPanel crearSeccionCliente() {
-        JPanel panel = crearPanelSeccion("📋 Datos del Cliente");
+        JPanel panel = crearPanelSeccion("Datos del Cliente");
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
         // RUC
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.3;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.3;
         panel.add(new JLabel("RUC: *"), gbc);
         gbc.gridx = 1; gbc.weightx = 0.7;
         txtRuc = new JTextField(20);
@@ -173,7 +173,7 @@ public class CotizacionFormView extends JPanel {
      * Crea sección de condición de pago con 3 botones
      */
     private JPanel crearSeccionCondicionPago() {
-        JPanel panel = crearPanelSeccion("💳 Condición de Pago");
+        JPanel panel = crearPanelSeccion("Condición de Pago");
         panel.setLayout(new GridLayout(1, 3, 15, 0));
         
         grupoPago = new ButtonGroup();
@@ -206,20 +206,26 @@ public class CotizacionFormView extends JPanel {
         ));
         btn.setHorizontalAlignment(SwingConstants.CENTER);
         btn.setSelected(seleccionado);
-        
-        // Efecto visual al seleccionar
-        btn.addActionListener(e -> {
-            if (btn.isSelected()) {
-                btn.setBackground(COLOR_PRIMARIO);
-                btn.setForeground(Color.WHITE);
-            }
-        });
-        
+
         if (seleccionado) {
             btn.setBackground(COLOR_PRIMARIO);
             btn.setForeground(Color.WHITE);
+        } else{
+            btn.setBackground(Color.WHITE);
+            btn.setForeground(Color.BLACK);
         }
-        
+
+        // Efecto visual al seleccionar
+        btn.addItemListener(e -> {
+            if (btn.isSelected()) {
+                btn.setBackground(COLOR_PRIMARIO);
+                btn.setForeground(Color.WHITE);
+            } else{
+                btn.setBackground(Color.WHITE);
+                btn.setForeground(Color.BLACK);
+            }
+        });
+
         return btn;
     }
     
@@ -227,7 +233,7 @@ public class CotizacionFormView extends JPanel {
      * Crea sección de productos
      */
     private JPanel crearSeccionProductos() {
-        JPanel panel = crearPanelSeccion("📦 Productos / Servicios");
+        JPanel panel = crearPanelSeccion("Productos / Servicios");
         panel.setLayout(new BorderLayout(10, 10));
         
         // Tabla
@@ -244,7 +250,7 @@ public class CotizacionFormView extends JPanel {
         tablaProductos.setRowHeight(30);
         tablaProductos.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
         tablaProductos.getTableHeader().setBackground(COLOR_PRIMARIO);
-        tablaProductos.getTableHeader().setForeground(Color.WHITE);
+        tablaProductos.getTableHeader().setForeground(Color.BLACK);
         
         // Agregar listener para calcular subtotales
         modeloTabla.addTableModelListener(e -> {
@@ -265,14 +271,14 @@ public class CotizacionFormView extends JPanel {
         
         JButton btnAgregar = new JButton("+ Agregar Producto");
         btnAgregar.setBackground(new Color(40, 167, 69));
-        btnAgregar.setForeground(Color.WHITE);
+        btnAgregar.setForeground(Color.BLACK);
         btnAgregar.setFont(new Font("Arial", Font.BOLD, 12));
         btnAgregar.setFocusPainted(false);
         btnAgregar.addActionListener(e -> agregarFilaProducto());
         
         JButton btnEliminar = new JButton("- Eliminar Seleccionado");
         btnEliminar.setBackground(new Color(220, 53, 69));
-        btnEliminar.setForeground(Color.WHITE);
+        btnEliminar.setForeground(Color.BLACK);
         btnEliminar.setFont(new Font("Arial", Font.BOLD, 12));
         btnEliminar.setFocusPainted(false);
         btnEliminar.addActionListener(e -> eliminarFilaProducto());
@@ -317,7 +323,7 @@ public class CotizacionFormView extends JPanel {
      * Crea sección de configuración
      */
     private JPanel crearSeccionConfiguracion() {
-        JPanel panel = crearPanelSeccion("⚙️ Configuración");
+        JPanel panel = crearPanelSeccion("Configuración");
         panel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
         
         // Días de vigencia
@@ -345,7 +351,7 @@ public class CotizacionFormView extends JPanel {
      * Crea sección de resumen
      */
     private JPanel crearSeccionResumen() {
-        JPanel panel = crearPanelSeccion("💰 Resumen");
+        JPanel panel = crearPanelSeccion("Resumen");
         panel.setLayout(new GridLayout(3, 2, 10, 10));
         
         Font fontLabel = new Font("Arial", Font.BOLD, 14);
@@ -406,11 +412,11 @@ public class CotizacionFormView extends JPanel {
         JPanel panel = new JPanel();
         panel.setBackground(Color.WHITE);
         
-        JButton btnGenerar = new JButton("🚀 GENERAR COTIZACIÓN");
+        JButton btnGenerar = new JButton("GENERAR COTIZACIÓN");
         btnGenerar.setFont(new Font("Arial", Font.BOLD, 18));
         btnGenerar.setPreferredSize(new Dimension(400, 50));
         btnGenerar.setBackground(COLOR_PRIMARIO);
-        btnGenerar.setForeground(Color.WHITE);
+        btnGenerar.setForeground(Color.BLACK);
         btnGenerar.setFocusPainted(false);
         btnGenerar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         

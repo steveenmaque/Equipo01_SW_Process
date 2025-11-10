@@ -66,7 +66,7 @@ public class MainWindow extends JFrame {
         JPanel panelTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelTitulo.setBackground(COLOR_PRIMARIO);
         
-        JLabel lblLogo = new JLabel("🎈");
+        JLabel lblLogo = new JLabel(""); // Falta colocar el logo de la empresa
         lblLogo.setFont(new Font("Arial", Font.PLAIN, 40));
         
         JLabel lblTitulo = new JLabel("InfleSusVentas SRL");
@@ -114,21 +114,21 @@ public class MainWindow extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         
         // Botones del menú
-        panel.add(crearBotonMenu("🏠 Inicio", this::mostrarInicio));
+        panel.add(crearBotonMenu("Inicio", this::mostrarInicio));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("📋 Nueva Cotización", this::mostrarCotizacion));
+        panel.add(crearBotonMenu("Nueva Cotización", this::mostrarCotizacion));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("👥 Clientes", this::mostrarClientes));
+        panel.add(crearBotonMenu("Clientes", this::mostrarClientes));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("🛒 Ventas", this::mostrarVentas));
+        panel.add(crearBotonMenu("Ventas", this::mostrarVentas));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("📄 Comprobantes", this::mostrarComprobantes));
+        panel.add(crearBotonMenu("Comprobantes", this::mostrarComprobantes));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("🚚 Guías de Remisión", this::mostrarGuias));
+        panel.add(crearBotonMenu("Guías de Remisión", this::mostrarGuias));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("📊 Reportes", this::mostrarReportes));
+        panel.add(crearBotonMenu("Reportes", this::mostrarReportes));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("⚙️ Configuración", this::mostrarConfiguracion));
+        panel.add(crearBotonMenu("Configuración", this::mostrarConfiguracion));
         
         // Espaciador
         panel.add(Box.createVerticalGlue());
@@ -145,7 +145,7 @@ public class MainWindow extends JFrame {
     private JButton crearBotonMenu(String texto, Runnable accion) {
         JButton btn = new JButton(texto);
         btn.setFont(new Font("Arial", Font.PLAIN, 14));
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(Color.BLACK);
         btn.setBackground(COLOR_MENU);
         btn.setHorizontalAlignment(SwingConstants.LEFT);
         btn.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
