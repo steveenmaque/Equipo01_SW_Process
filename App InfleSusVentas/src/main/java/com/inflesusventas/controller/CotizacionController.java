@@ -55,10 +55,10 @@ public class CotizacionController {
         try {
             System.out.println("🔄 Generando PDF para cotización N° " + cotizacionActual.getNumeroCotizacion() + "...");
             String rutaPdf = pdfService.generarPdfCotizacion(cotizacionActual);
-            System.out.println("✅ ¡ÉXITO! PDF guardado en: " + rutaPdf);
+            System.out.println(" ¡ÉXITO! PDF guardado en: " + rutaPdf);
             return rutaPdf;
         } catch (Exception e) {
-            System.err.println("❌ ERROR GRAVE generando PDF: " + e.getMessage());
+            System.err.println(" ERROR GRAVE generando PDF: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

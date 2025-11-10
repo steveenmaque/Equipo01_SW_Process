@@ -22,8 +22,8 @@ import java.util.List;
 public class CotizacionFormView extends JPanel {
     
     // Colores corporativos
-    private static final Color COLOR_PRIMARIO = new Color(102, 126, 234);
-    private static final Color COLOR_SECUNDARIO = new Color(118, 75, 162);
+    private static final Color COLOR_PRIMARIO = new Color(15,65,116);
+    private static final Color COLOR_SECUNDARIO = new Color(12,40,113);
     private static final Color COLOR_FONDO = new Color(248, 249, 250);
     
     // Controlador
@@ -249,7 +249,7 @@ public class CotizacionFormView extends JPanel {
         tablaProductos.setFont(new Font("Arial", Font.PLAIN, 13));
         tablaProductos.setRowHeight(30);
         tablaProductos.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
-        tablaProductos.getTableHeader().setBackground(COLOR_PRIMARIO);
+        tablaProductos.getTableHeader().setBackground(Color.BLACK);
         tablaProductos.getTableHeader().setForeground(Color.BLACK);
         
         // Agregar listener para calcular subtotales

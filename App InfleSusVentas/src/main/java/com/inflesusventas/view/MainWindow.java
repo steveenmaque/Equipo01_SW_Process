@@ -14,8 +14,8 @@ import java.awt.*;
  */
 public class MainWindow extends JFrame {
     
-    private static final Color COLOR_PRIMARIO = new Color(102, 126, 234);
-    private static final Color COLOR_MENU = new Color(52, 58, 64);
+    private static final Color COLOR_PRIMARIO = new Color(15,65,116);
+    private static final Color COLOR_MENU = new Color(230, 130, 70);
     
     private CotizacionController cotizacionController;
     private JPanel panelContenido;
@@ -71,7 +71,7 @@ public class MainWindow extends JFrame {
         
         JLabel lblTitulo = new JLabel("InfleSusVentas SRL");
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 28));
-        lblTitulo.setForeground(Color.BLACK);
+        lblTitulo.setForeground(COLOR_MENU);
         
         JLabel lblSubtitulo = new JLabel("Sistema de Gestión Desktop");
         lblSubtitulo.setFont(new Font("Arial", Font.PLAIN, 14));
