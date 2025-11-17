@@ -46,6 +46,14 @@
             <artifactId>spring-boot-devtools</artifactId>
             <version>3.5.6</version>
         </dependency>
+
+        <!-- JUnit 5 para pruebas unitarias -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
