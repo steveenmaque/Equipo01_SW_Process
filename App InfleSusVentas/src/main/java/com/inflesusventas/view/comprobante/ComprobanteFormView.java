@@ -46,8 +46,6 @@ public class ComprobanteFormView extends JPanel {
     // Sección 2 - dinámicos / control de items
     private JSpinner spFechaEmision;
     private JPanel itemsContainer;
-    private JButton btnAñadirItem;
-    private JButton btnEliminarItem;
     private java.util.List<JPanel> listaItems = new java.util.ArrayList<>();
     private JScrollPane scrollTablaProductos;
 
@@ -677,21 +675,6 @@ public class ComprobanteFormView extends JPanel {
         top.add(lblFecha);
         top.add(spFechaEmision);
 
-        // botón Añadir item (usuario añade 1 o 2 items según necesidad; max 2)
-        btnAñadirItem = new JButton("Añadir item");
-        btnAñadirItem.setFont(labelFont);
-        btnAñadirItem.addActionListener(ev -> addItem());
-        top.add(Box.createHorizontalStrut(12));
-        top.add(btnAñadirItem);
-
-        // botón Eliminar item (al lado) - no dejar menos de 1
-        btnEliminarItem = new JButton("Eliminar item");
-        btnEliminarItem.setFont(labelFont);
-        btnEliminarItem.setEnabled(false); // inicialmente deshabilitado hasta que haya >1
-        btnEliminarItem.addActionListener(ev -> removeItem());
-        top.add(Box.createHorizontalStrut(6));
-        top.add(btnEliminarItem);
-
         panel.add(top, BorderLayout.NORTH);
 
         // contenedor donde se agregan los mini-items (1..2)
@@ -699,11 +682,6 @@ public class ComprobanteFormView extends JPanel {
         itemsContainer.setBackground(Color.WHITE);
         itemsContainer.setBorder(BorderFactory.createEmptyBorder(6,6,6,6));
         panel.add(itemsContainer, BorderLayout.CENTER);
-
-        // inicial: aseguramos al menos 1 item visible
-        SwingUtilities.invokeLater(() -> {
-            if (listaItems.isEmpty()) addItem();
-        });
 
         return panel;
     }
@@ -846,72 +824,6 @@ public class ComprobanteFormView extends JPanel {
         if (itemsContainer != null) {
             itemsContainer.revalidate();
             itemsContainer.repaint();
-        }
-
-        // Actualizar botones de control
-        if (btnEliminarItem != null) {
-            btnEliminarItem.setEnabled(false); // No se pueden eliminar items (son determinados por productos)
-        }
-        if (btnAñadirItem != null) {
-            btnAñadirItem.setEnabled(false); // No se pueden añadir items (son determinados por productos)
-        }
-    }
-
-    /**
-     * Elimina el último item del contenedor (si hay más de 1).
-     */
-    private void removeItem() {
-        if (listaItems.size() <= 1) {
-            JOptionPane.showMessageDialog(this, "Debe quedar al menos 1 item.", "Operación no permitida", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        // eliminar último item agregado
-        JPanel last = listaItems.remove(listaItems.size() - 1);
-        if (itemsContainer != null) {
-            itemsContainer.remove(last);
-            itemsContainer.revalidate();
-            itemsContainer.repaint();
-        }
-        // reajustar referencias (si quedó solo el izquierdo)
-        if (listaItems.size() == 1) {
-            // reasignar referencias left (se hicieron al crear los mini-panels)
-            // limpiar referencias de right para evitar inconsistencias
-        }
-        // actualizar botones
-        if (btnEliminarItem != null) btnEliminarItem.setEnabled(listaItems.size() > 1);
-        if (btnAñadirItem != null) btnAñadirItem.setEnabled(listaItems.size() < 2);
-        // actualizar valores desde la fila seleccionada si existe
-        if (tablaProductos != null && tablaProductos.getSelectedRow() != -1) {
-            poblarSeccion2SegunCondicion();
-        }
-    }
-
-    /**
-     * Añade un mini-item al contenedor. No se utiliza cuando los items son automáticos por productos.
-     */
-    private void addItem() {
-        if (listaItems.size() >= 2) {
-            JOptionPane.showMessageDialog(this, "Máximo 2 items permitidos.", "Límite alcanzado", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        Font labelFont = new Font("Arial", Font.PLAIN, 14);
-        boolean isLeft = listaItems.isEmpty();
-        JPanel mini = crearMiniItemPanel(isLeft ? "Item 1" : "Item 2", labelFont, isLeft, 0.0);
-        listaItems.add(mini);
-        itemsContainer.add(mini);
-        itemsContainer.revalidate();
-        itemsContainer.repaint();
-        // actualizar valores desde la selección actual (si hay fila seleccionada)
-        if (tablaProductos != null && tablaProductos.getSelectedRow() != -1) {
-            poblarSeccion2SegunCondicion();
-        }
-        // habilitar/deshabilitar botón eliminar según cantidad de items
-        if (btnEliminarItem != null) {
-            btnEliminarItem.setEnabled(listaItems.size() > 1);
-        }
-        // si alcanzamos 2 items, deshabilitar añadir
-        if (btnAñadirItem != null) {
-            btnAñadirItem.setEnabled(listaItems.size() < 2);
         }
     }
 
