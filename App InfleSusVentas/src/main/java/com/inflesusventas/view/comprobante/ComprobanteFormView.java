@@ -26,6 +26,7 @@ public class ComprobanteFormView extends JPanel {
     // Tabla de productos
     private JTable tablaProductos;
     private DefaultTableModel modeloTabla;
+    private double subtotalCotizacionCompleta = 0.0; // subtotal total de todos los productos
 
     // componentes faltantes referenciados en la clase
     private JRadioButton rdoDetraccionSi, rdoDetraccionNo;
@@ -50,11 +51,9 @@ public class ComprobanteFormView extends JPanel {
     private JScrollPane scrollTablaProductos;
 
     // referencias para mostrar valores / impuestos
-    private JLabel lblBolsaPlastica;
     private JLabel lblValorUnitario; // etiqueta global opcional
     private JLabel lblValorUnitarioLeft, lblValorUnitarioRight;
-    private JSpinner spCantidadLeft, spCantidadRight, spCantidad1;
-    private JTextField txtIgvPercent1, txtIgvType1;
+    private JSpinner spCantidadLeft, spCantidadRight;
     private JTextField txtIgvPercentLeft, txtIgvTypeLeft;
     private JTextField txtIgvPercentRight, txtIgvTypeRight;
 
@@ -154,7 +153,7 @@ public class ComprobanteFormView extends JPanel {
     }
 
     private JPanel crearSeccionTablaProductos() {
-        JPanel panel = crearPanelSeccion("Productos de la Cotización");
+        JPanel panel = crearPanelSeccion("Productos de la Cotización - Selecciona para procesar");
 
         // columnas incluyendo RUC cliente
         String[] columnas = {"Código", "Descripción", "RUC Cliente", "Cantidad", "Unidad", "P. Unit. (S/)", "Subtotal (S/)", "Condición"};
@@ -173,7 +172,7 @@ public class ComprobanteFormView extends JPanel {
         ajustarAltoTabla();
         panel.add(scrollTablaProductos, BorderLayout.CENTER);
 
-        // Listener selección
+        // Listener selección - cuando seleccione cualquier fila, procesa TODA la cotización
         tablaProductos.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
@@ -183,23 +182,13 @@ public class ComprobanteFormView extends JPanel {
                     if (seleccionado) {
                         poblarSeccion1DesdeCotizacion();
                         poblarSeccion2SegunCondicion();
-                        // actualizar sección 3 con los valores del subtotal seleccionado
+                        // actualizar sección 3 con los valores del subtotal total de la cotización
                         actualizarSeccion3();
                     }
                 }
             }
         });
 
-        return panel;
-    }
-
-    private JPanel crearSeccionPlaceholder(String titulo) {
-        JPanel panel = crearPanelSeccion(titulo);
-        JPanel contenido = new JPanel();
-        contenido.setBackground(Color.WHITE);
-        contenido.add(new JLabel(" (área en blanco para inputs) "));
-        panel.add(contenido, BorderLayout.CENTER);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 340));
         return panel;
     }
 
@@ -225,7 +214,7 @@ public class ComprobanteFormView extends JPanel {
         gbcMainHeader.weightx = 0.25;
         panel.add(lblForma, gbcMainHeader);
 
-        cmbFormaPagoSelector = new JComboBox<>(new String[] {"CONTADO", "CREDITO", "50/50"});
+        cmbFormaPagoSelector = new JComboBox<>(new String[] {"CONTADO", "CREDITO"});
         cmbFormaPagoSelector.setFont(new Font("Arial", Font.PLAIN, 14));
         cmbFormaPagoSelector.setSelectedItem("CONTADO");
         gbcMainHeader.gridx = 1;
@@ -292,6 +281,7 @@ public class ComprobanteFormView extends JPanel {
 
         txtRucCliente = new JTextField();
         txtRucCliente.setFont(labelFont);
+        txtRucCliente.setEditable(false);
         gbc.gridx = 1;
         gbc.gridy = row++;
         gbc.weightx = 0.65;
@@ -566,6 +556,7 @@ public class ComprobanteFormView extends JPanel {
 
     public void cargarProductosDesdeCotizacion() {
         modeloTabla.setRowCount(0);
+        subtotalCotizacionCompleta = 0.0; // reinicializar
         Cotizacion cotizacion = cotizacionController.getCotizacionActual();
         if (cotizacion == null || cotizacion.getProductos() == null || cotizacion.getProductos().isEmpty()) {
             ajustarAltoTabla();
@@ -575,6 +566,12 @@ public class ComprobanteFormView extends JPanel {
         List<ProductoCotizacion> productos = cotizacion.getProductos();
         String ruc = (cotizacion.getCliente() != null && cotizacion.getCliente().getRuc() != null)
                 ? cotizacion.getCliente().getRuc() : "-";
+        
+        // calcular subtotal total de todos los productos
+        for (ProductoCotizacion p : productos) {
+            subtotalCotizacionCompleta += p.getSubtotal();
+        }
+        
         for (ProductoCotizacion p : productos) {
             Object[] fila = new Object[] {
                     safeToString(p.getCodigo()),
@@ -769,15 +766,6 @@ public class ComprobanteFormView extends JPanel {
         p.add(new JScrollPane(txtD), gbc);
 
         gbc.gridx = 0; gbc.gridy = r;
-        JLabel lblBol = new JLabel("Impuesto bolsa plástica:");
-        lblBol.setFont(labelFont);
-        p.add(lblBol, gbc);
-        JLabel lblBolVal = new JLabel("NO");
-        lblBolVal.setFont(labelFont);
-        gbc.gridx = 1; gbc.gridy = r++;
-        p.add(lblBolVal, gbc);
-
-        gbc.gridx = 0; gbc.gridy = r;
         JLabel lblValUnit = new JLabel("Valor unitario (sin IGV):");
         lblValUnit.setFont(labelFont);
         p.add(lblValUnit, gbc);
@@ -821,24 +809,18 @@ public class ComprobanteFormView extends JPanel {
     }
 
     /**
-      * Rellena / adapta la Sección 2 según la condición de pago del producto seleccionado.
-      * lee la columna "Condición" de la fila seleccionada.
+      * Rellena / adapta la Sección 2 según la condición de pago de la cotización.
+      * Utiliza el SUBTOTAL TOTAL de TODOS los productos de la cotización.
       */
     private void poblarSeccion2SegunCondicion() {
         int fila = tablaProductos.getSelectedRow();
         if (fila == -1) return;
 
-        // decidir por selector (ahora solo CONTADO / CREDITO)
-        String modo = (cmbFormaPagoSelector == null) ? "CONTADO" : ((String) cmbFormaPagoSelector.getSelectedItem());
-
         // fecha por defecto
         spFechaEmision.setValue(new java.util.Date());
 
-        // calcular a partir del SubTotal (no dividir por cantidad)
-        double subtotal = 0.0;
-        try {
-            subtotal = Double.parseDouble(modeloTabla.getValueAt(fila, 6).toString());
-        } catch (Exception ex) { /* ignore */ }
+        // usar el SUBTOTAL TOTAL de todos los productos (ya calculado en cargarProductosDesdeCotizacion)
+        double subtotal = subtotalCotizacionCompleta;
 
         // Si no hay items, añadir uno (al menos 1)
         if (listaItems.isEmpty()) {
@@ -846,8 +828,8 @@ public class ComprobanteFormView extends JPanel {
         }
 
         // Actualizar valores según número de items:
-        // - 1 item: valor unitario = SubTotal (tal como indicaste)
-        // - 2 items: cada item recibe 50% del SubTotal
+        // - 1 item: valor unitario = SubTotal total (tal como indicaste)
+        // - 2 items: cada item recibe 50% del SubTotal total
         if (listaItems.size() == 1) {
             String totalStr = String.format("S/ %.2f", subtotal);
             // actualizar mini-item left (primer item)
@@ -870,11 +852,8 @@ public class ComprobanteFormView extends JPanel {
             if (lblValorUnitario != null) lblValorUnitario.setText(halfStr);
         }
 
-        // Bolsa plástica siempre NO (según especificación)
-        if (lblBolsaPlastica != null) lblBolsaPlastica.setText("NO");
-
         // Nota: la decisión de permitir 1 o 2 items queda en el usuario mediante el botón "Añadir item".
-        // Aquí solo inicializamos/actualizamos los valores en base al SubTotal de la fila seleccionada.
+        // Aquí solo inicializamos/actualizamos los valores en base al SubTotal total de la cotización completa.
     }
 
     /**
@@ -1120,10 +1099,10 @@ public class ComprobanteFormView extends JPanel {
     }
 
     /**
-     * Actualiza valores de la Sección 3 en base a la fila seleccionada y al selector de tipo de pago.
-     * - Monto de detracción = Subtotal * 12% (redondeado a entero)  <-- CAMBIO
-     * - Monto neto = Subtotal - Monto detracción
-     * - Monto de la cuota = Subtotal - Monto detracción
+     * Actualiza valores de la Sección 3 en base al SUBTOTAL TOTAL de la cotización completa y al selector de tipo de pago.
+     * - Monto de detracción = Subtotal total * 12% (redondeado a entero)
+     * - Monto neto = Subtotal total - Monto detracción
+     * - Monto de la cuota = Subtotal total - Monto detracción
      */
     private void actualizarSeccion3() {
         int fila = (tablaProductos != null) ? tablaProductos.getSelectedRow() : -1;
@@ -1134,12 +1113,10 @@ public class ComprobanteFormView extends JPanel {
             return;
         }
 
-        // leer subtotal (columna 6)
-        double subtotal = 0.0;
-        try { subtotal = Double.parseDouble(modeloTabla.getValueAt(fila, 6).toString()); }
-        catch (Exception ex) { subtotal = 0.0; }
+        // usar el SUBTOTAL TOTAL de todos los productos
+        double subtotal = subtotalCotizacionCompleta;
 
-        // Cálculo de detracción basado en SUBTOTAL (no IGV)
+        // Cálculo de detracción basado en SUBTOTAL TOTAL (no solo un producto)
         long detrPorDefecto = Math.round(subtotal * 0.12); // redondeado al entero
 
         // si el campo está vacío, rellenar con valor por defecto
@@ -1157,7 +1134,7 @@ public class ComprobanteFormView extends JPanel {
             if (!t.isEmpty()) montoDet = Double.parseDouble(t);
         } catch (Exception ignored) { montoDet = detrPorDefecto; }
 
-        // monto neto pendiente = subtotal - montoDet
+        // monto neto pendiente = subtotal total - montoDet
         double montoNeto = subtotal - montoDet;
 
         // si campo neto está vacío, rellenar calculado (editable por usuario)
@@ -1207,11 +1184,4 @@ public class ComprobanteFormView extends JPanel {
         }
     }
 
-    // pequeño helper para document listener inline
-    private abstract class SimpleDocumentListener implements javax.swing.event.DocumentListener {
-        public abstract void update();
-        @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { update(); }
-        @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { update(); }
-        @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { update(); }
-    }
 }
