@@ -13,19 +13,6 @@
 | RF2 | CN07 | CU-06, CU-09 | Calcular precio CON IGV (18%) | Producto: cantidad=1, precio=100 | Subtotal=100.00, IGV=18.00, Total=118.00 | Screenshot_CN07.png | EXITO |
 | RF2 | CN08 | CU-06, CU-09 | Múltiples productos suman correctamente | Producto1: 2x50=100, Producto2: 3x100=300 | Subtotal = 400.00 | Screenshot_CN08.png | EXITO |
 
-## Matriz de trazabilidad de las pruebas de caja negra
-
-| RF  | ID CASO | CU Relacionado     | Descripción breve del caso                     | Entrada(s)                                                                                   | Resultado Esperado                                                              | Evidencia | Resultado |
-|-----|---------|---------------------|------------------------------------------------|----------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|-----------|-----------|
-| RF1 | CN01    | CU-01, CU-02        | Registrar cliente con datos válidos           | RUC: "20123456789", Razón Social: "Empresa Test SAC", Email: "test@empresa.com", Tel: "999888777" | Cliente registrado exitosamente con todos los datos correctos                   | ![CN01](guide02/imagenes/evidencias-pruebas/Screenshot_CN01.png) | EXITO |
-| RF1 | CN02    | CU-01               | Validar RUC con menos de 11 dígitos           | RUC: "201234567" (9 dígitos)                                                                 | Error: "RUC debe tener 11 dígitos" - Lanzar IllegalArgumentException            | ![CN02](imagenes/evidencias-pruebas/Screenshot_CN02.png) | FALLO |
-| RF2 | CN03    | CU-09               | Generar cotización con numeración correlativa | Número de cotización generado aleatoriamente                                                 | Cotización con número > 0 asignado correctamente                                | ![CN03](imagenes/evidencias-pruebas/Screenshot_CN03.png) | EXITO |
-| RF2 | CN04    | CU-09               | Generar PDF sin cliente debe fallar           | Cliente: null, productos: 1                                                                  | No genera PDF, retorna null                                                     | ![CN04](imagenes/evidencias-pruebas/Screenshot_CN04.png) | EXITO |
-| RF2 | CN05    | CU-09               | Generar PDF sin productos debe fallar         | Cliente válido, productos: []                                                                | No genera PDF, retorna null                                                     | ![CN05](imagenes/evidencias-pruebas/Screenshot_CN05.png) | EXITO |
-| RF2 | CN06    | CU-06, CU-09        | Calcular precio SIN IGV                       | Producto: cantidad=1, precio=100, mostrarIGV=false                                           | Subtotal = 100.00 (sin IGV)                                                     | ![CN06](imagenes/evidencias-pruebas/Screenshot_CN06.png) | EXITO |
-| RF2 | CN07    | CU-06, CU-09        | Calcular precio CON IGV (18%)                 | Producto: cantidad=1, precio=100                                                             | Subtotal=100.00, IGV=18.00, Total=118.00                                        | ![CN07](imagenes/evidencias-pruebas/Screenshot_CN07.png) | EXITO |
-| RF2 | CN08    | CU-06, CU-09        | Múltiples productos suman correctamente        | Producto1: 2x50=100, Producto2: 3x100=300                                                    | Subtotal = 400.00                                                               | ![CN08](imagenes/evidencias-pruebas/Screenshot_CN08.png) | EXITO |
-
 ## Trazabilidad con Casos de Uso
 
 | Caso de Uso | Descripción | Pruebas relacionadas |
