@@ -36,10 +36,10 @@
 |-----------|-------------|------------------------|-----------------|
 | **RF1** | Registro de clientes |  Parcialmente implementado | CN01, CN02 |
 | **RF2** | Generación de cotizaciones |  Parcialmente implementado | CN03, CN04, CN05, CN06, CN07, CN08 |
-| **RF3** | Emisión de comprobantes electrónicos | ⏳ Pendiente | - |
-| **RF4** | Generación de guías de remisión | ⏳ Pendiente | - |
-| **RF5** | Almacenamiento y envío de documentos | ⏳ Pendiente | - |
-| **RF6** | Registro de datos de traslado | ⏳ Pendiente | - |
+| **RF3** | Emisión de comprobantes electrónicos |  Pendiente | - |
+| **RF4** | Generación de guías de remisión |  Pendiente | - |
+| **RF5** | Almacenamiento y envío de documentos |  Pendiente | - |
+| **RF6** | Registro de datos de traslado |  Pendiente | - |
 
 ## Observaciones
 
@@ -64,7 +64,6 @@ según lo especificado en la regla de negocio RN30 del CU-09.
 ## Evidencias
 
 Todas las capturas de pantalla se encuentran en la carpeta `imagenes/evidencias-pruebas/`:
-![CN01](imagenes/evidencias-pruebas/Screenshot_CN01.png)
 
 - `Screenshot_CN01.png` - Cliente registrado con datos válidos 
 - `Screenshot_CN02.png` - Error de validación de RUC (defecto DEF-001) 
