@@ -11,6 +11,7 @@
 | RF2 | CN05 | CU-09 | Generar PDF sin productos debe fallar | Cliente válido, productos: [] | No genera PDF, retorna null | Screenshot_CN05.png | EXITO |
 | RF2 | CN06 | CU-06, CU-09 | Calcular precio SIN IGV | Producto: cantidad=1, precio=100, mostrarIGV=false | Subtotal = 100.00 (sin IGV) | Screenshot_CN06.png | EXITO |
 | RF2 | CN07 | CU-06, CU-09 | Calcular precio CON IGV (18%) | Producto: cantidad=1, precio=100 | Subtotal=100.00, IGV=18.00, Total=118.00 | Screenshot_CN07.png | EXITO |
+| RF2 | CN08 | CU-06, CU-09 | Múltiples productos suman correctamente | Producto1: 2x50=100, Producto2: 3x100=300 | Subtotal = 400.00 | Screenshot_CN08.png | EXITO |
 
 ## Trazabilidad con Casos de Uso
 
@@ -33,8 +34,8 @@
 
 | Requisito | Descripción | Estado de implementación | Casos de prueba |
 |-----------|-------------|------------------------|-----------------|
-| **RF1** | Registro de clientes | ✅ Parcialmente implementado | CN01, CN02 |
-| **RF2** | Generación de cotizaciones | ✅ Parcialmente implementado | CN03, CN04, CN05, CN06, CN07 |
+| **RF1** | Registro de clientes |  Parcialmente implementado | CN01, CN02 |
+| **RF2** | Generación de cotizaciones |  Parcialmente implementado | CN03, CN04, CN05, CN06, CN07, CN08 |
 | **RF3** | Emisión de comprobantes electrónicos | ⏳ Pendiente | - |
 | **RF4** | Generación de guías de remisión | ⏳ Pendiente | - |
 | **RF5** | Almacenamiento y envío de documentos | ⏳ Pendiente | - |
@@ -63,6 +64,7 @@ según lo especificado en la regla de negocio RN30 del CU-09.
 ## Evidencias
 
 Todas las capturas de pantalla se encuentran en la carpeta `imagenes/evidencias-pruebas/`:
+![CN01](imagenes/evidencias-pruebas/Screenshot_CN01.png)
 
 - `Screenshot_CN01.png` - Cliente registrado con datos válidos 
 - `Screenshot_CN02.png` - Error de validación de RUC (defecto DEF-001) 
@@ -70,5 +72,7 @@ Todas las capturas de pantalla se encuentran en la carpeta `imagenes/evidencias-
 - `Screenshot_CN04.png` - PDF sin cliente falla correctamente 
 - `Screenshot_CN05.png` - PDF sin productos falla correctamente 
 - `Screenshot_CN06.png` - Cálculo de precio SIN IGV 
-- `Screenshot_CN07.png` - Cálculo de precio CON IGV (18%) 
+- `Screenshot_CN07.png` - Cálculo de precio CON IGV (18%)
+- `Screenshot_CN08.png` - Múltiples productos sumando correctamente
+- `Screenshot_CajaBlanca_Resultados.png` - Resumen de pruebas de caja blanca
 - `Screenshot_CajaNegra_Resultados.png` - Resumen general de pruebas
