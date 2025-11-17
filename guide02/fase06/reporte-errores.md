@@ -42,9 +42,9 @@ void testValidarRucInvalido() {
 
 **Estado del defecto:** Abierto
 
-**Corregido por:** Clisman
+**Corregido por:** 
 
-**Fecha de cierre:** 2025-01-15
+**Fecha de cierre:** 
 
 **Prioridad:** Alta
 
