@@ -33,7 +33,7 @@ PrecioSinIGV = PrecioBase
 
 ### 3. Emisión de comprobantes electrónicos
 
-- Emitir facturas, boletas, notas de crédito y débito en formato electrónico (XML y PDF).
+- Emitir solamente facturas y notas de crédito en formato electrónico (XML y PDF).
 - Incluir el código QR, logo de la empresa y datos de SUNAT obligatorios.
 - Conectarse a SUNAT para validar cada comprobante en línea.
 
