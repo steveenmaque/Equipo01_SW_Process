@@ -26,11 +26,12 @@ public class ComprobanteFormView extends JPanel {
     // Tabla de productos
     private JTable tablaProductos;
     private DefaultTableModel modeloTabla;
-    private double subtotalCotizacionCompleta = 0.0; // subtotal total de todos los productos
+    private double subtotalConIgvCotizacion = 0.0; // subtotal con IGV de todos los productos
 
     // componentes faltantes referenciados en la clase
     private JRadioButton rdoDetraccionSi, rdoDetraccionNo;
     private JTextField txtRucCliente;
+    private JTextField txtRazonSocial;
     private JRadioButton rdoPagoAnticipadoSi, rdoPagoAnticipadoNo;
     private JRadioButton rdoEmisorItineranteSi, rdoEmisorItineranteNo;
     private JRadioButton rdoEstablecimientoSi, rdoEstablecimientoNo;
@@ -51,11 +52,6 @@ public class ComprobanteFormView extends JPanel {
     private JScrollPane scrollTablaProductos;
 
     // referencias para mostrar valores / impuestos
-    private JLabel lblValorUnitario; // etiqueta global opcional
-    private JLabel lblValorUnitarioLeft, lblValorUnitarioRight;
-    private JSpinner spCantidadLeft, spCantidadRight;
-    private JTextField txtIgvPercentLeft, txtIgvTypeLeft;
-    private JTextField txtIgvPercentRight, txtIgvTypeRight;
 
     // Paneles / secciones
     private JPanel panelSeccion1;
@@ -286,6 +282,21 @@ public class ComprobanteFormView extends JPanel {
         gbc.gridy = row++;
         gbc.weightx = 0.65;
         panel.add(txtRucCliente, gbc);
+
+        // Razón social
+        JLabel lblRazon = new JLabel("Razón social:");
+        lblRazon.setFont(labelFont);
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.35;
+        panel.add(lblRazon, gbc);
+
+        txtRazonSocial = new JTextField();
+        txtRazonSocial.setFont(labelFont);
+        gbc.gridx = 1;
+        gbc.gridy = row++;
+        gbc.weightx = 0.65;
+        panel.add(txtRazonSocial, gbc);
 
         // Pago anticipado
         JLabel lblPago = new JLabel("Pago Anticipado:");
@@ -556,7 +567,7 @@ public class ComprobanteFormView extends JPanel {
 
     public void cargarProductosDesdeCotizacion() {
         modeloTabla.setRowCount(0);
-        subtotalCotizacionCompleta = 0.0; // reinicializar
+        subtotalConIgvCotizacion = 0.0; // reinicializar
         Cotizacion cotizacion = cotizacionController.getCotizacionActual();
         if (cotizacion == null || cotizacion.getProductos() == null || cotizacion.getProductos().isEmpty()) {
             ajustarAltoTabla();
@@ -567,9 +578,11 @@ public class ComprobanteFormView extends JPanel {
         String ruc = (cotizacion.getCliente() != null && cotizacion.getCliente().getRuc() != null)
                 ? cotizacion.getCliente().getRuc() : "-";
         
-        // calcular subtotal total de todos los productos
+        // calcular subtotal con IGV
         for (ProductoCotizacion p : productos) {
-            subtotalCotizacionCompleta += p.getSubtotal();
+            // Calcular subtotal con IGV (asumiendo 18% de IGV)
+            double subtotalConIgv = p.getSubtotal() * 1.18;
+            subtotalConIgvCotizacion += subtotalConIgv;
         }
         
         for (ProductoCotizacion p : productos) {
@@ -698,8 +711,9 @@ public class ComprobanteFormView extends JPanel {
     /**
      * Crea un mini-panel de item usando la fuente provista.
      * El campo de descripción se inicializa con el texto pasado, editable.
+     * El valor unitario se establece al subtotal del producto (sin IGV).
      */
-    private JPanel crearMiniItemPanel(String tituloInicial, Font labelFont, boolean isLeft) {
+    private JPanel crearMiniItemPanel(String tituloInicial, Font labelFont, boolean isLeft, double subtotalProducto) {
         JPanel p = new JPanel(new GridBagLayout());
         p.setBackground(Color.WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -769,7 +783,7 @@ public class ComprobanteFormView extends JPanel {
         JLabel lblValUnit = new JLabel("Valor unitario (sin IGV):");
         lblValUnit.setFont(labelFont);
         p.add(lblValUnit, gbc);
-        JLabel lblVal = new JLabel("S/ 0.00");
+        JLabel lblVal = new JLabel(String.format("S/ %.2f", subtotalProducto));
         lblVal.setFont(labelFont);
         gbc.gridx = 1; gbc.gridy = r++;
         p.add(lblVal, gbc);
@@ -791,26 +805,13 @@ public class ComprobanteFormView extends JPanel {
         gbc.gridx = 2; gbc.gridy = r++;
         p.add(txtTipo, gbc);
 
-        // store references for left/right so we can update valores desde el controlador
-        if (isLeft) {
-            spCantidadLeft = spnCant;
-            lblValorUnitarioLeft = lblVal;
-            txtIgvPercentLeft = txtPct;
-            txtIgvTypeLeft = txtTipo;
-        } else {
-            spCantidadRight = spnCant;
-            lblValorUnitarioRight = lblVal;
-            txtIgvPercentRight = txtPct;
-            txtIgvTypeRight = txtTipo;
-        }
-
         // return panel
         return p;
     }
 
     /**
       * Rellena / adapta la Sección 2 según la condición de pago de la cotización.
-      * Utiliza el SUBTOTAL TOTAL de TODOS los productos de la cotización.
+      * Crea items automáticamente según la cantidad de productos diferentes.
       */
     private void poblarSeccion2SegunCondicion() {
         int fila = tablaProductos.getSelectedRow();
@@ -819,41 +820,41 @@ public class ComprobanteFormView extends JPanel {
         // fecha por defecto
         spFechaEmision.setValue(new java.util.Date());
 
-        // usar el SUBTOTAL TOTAL de todos los productos (ya calculado en cargarProductosDesdeCotizacion)
-        double subtotal = subtotalCotizacionCompleta;
-
-        // Si no hay items, añadir uno (al menos 1)
-        if (listaItems.isEmpty()) {
-            addItem();
+        // Limpiar items anteriores
+        listaItems.clear();
+        if (itemsContainer != null) {
+            itemsContainer.removeAll();
         }
 
-        // Actualizar valores según número de items:
-        // - 1 item: valor unitario = SubTotal total (tal como indicaste)
-        // - 2 items: cada item recibe 50% del SubTotal total
-        if (listaItems.size() == 1) {
-            String totalStr = String.format("S/ %.2f", subtotal);
-            // actualizar mini-item left (primer item)
-            if (lblValorUnitarioLeft != null) lblValorUnitarioLeft.setText(totalStr);
-            // actualizar posible label global
-            if (lblValorUnitario != null) lblValorUnitario.setText(totalStr);
-            // IGV y bolsa
-            if (txtIgvPercentLeft != null) txtIgvPercentLeft.setText("18%");
-            if (txtIgvTypeLeft != null) txtIgvTypeLeft.setText("Gravado");
-        } else if (listaItems.size() >= 2) {
-            double half = subtotal * 0.5;
-            String halfStr = String.format("S/ %.2f", half);
-            if (lblValorUnitarioLeft != null) lblValorUnitarioLeft.setText(halfStr);
-            if (lblValorUnitarioRight != null) lblValorUnitarioRight.setText(halfStr);
-            if (txtIgvPercentLeft != null) txtIgvPercentLeft.setText("18%");
-            if (txtIgvTypeLeft != null) txtIgvTypeLeft.setText("Gravado");
-            if (txtIgvPercentRight != null) txtIgvPercentRight.setText("18%");
-            if (txtIgvTypeRight != null) txtIgvTypeRight.setText("Gravado");
-            // actualizar label global también con subtotal/2 por compatibilidad
-            if (lblValorUnitario != null) lblValorUnitario.setText(halfStr);
+        // Crear un item por cada producto diferente
+        Cotizacion cotizacion = cotizacionController.getCotizacionActual();
+        if (cotizacion != null && cotizacion.getProductos() != null) {
+            List<ProductoCotizacion> productos = cotizacion.getProductos();
+            Font labelFont = new Font("Arial", Font.PLAIN, 14);
+            
+            for (int i = 0; i < productos.size(); i++) {
+                ProductoCotizacion producto = productos.get(i);
+                // Crear item con la descripción del producto
+                JPanel mini = crearMiniItemPanel(producto.getDescripcion(), labelFont, i == 0, producto.getSubtotal());
+                listaItems.add(mini);
+                if (itemsContainer != null) {
+                    itemsContainer.add(mini);
+                }
+            }
         }
 
-        // Nota: la decisión de permitir 1 o 2 items queda en el usuario mediante el botón "Añadir item".
-        // Aquí solo inicializamos/actualizamos los valores en base al SubTotal total de la cotización completa.
+        if (itemsContainer != null) {
+            itemsContainer.revalidate();
+            itemsContainer.repaint();
+        }
+
+        // Actualizar botones de control
+        if (btnEliminarItem != null) {
+            btnEliminarItem.setEnabled(false); // No se pueden eliminar items (son determinados por productos)
+        }
+        if (btnAñadirItem != null) {
+            btnAñadirItem.setEnabled(false); // No se pueden añadir items (son determinados por productos)
+        }
     }
 
     /**
@@ -875,10 +876,6 @@ public class ComprobanteFormView extends JPanel {
         if (listaItems.size() == 1) {
             // reasignar referencias left (se hicieron al crear los mini-panels)
             // limpiar referencias de right para evitar inconsistencias
-            spCantidadRight = null;
-            lblValorUnitarioRight = null;
-            txtIgvPercentRight = null;
-            txtIgvTypeRight = null;
         }
         // actualizar botones
         if (btnEliminarItem != null) btnEliminarItem.setEnabled(listaItems.size() > 1);
@@ -890,7 +887,7 @@ public class ComprobanteFormView extends JPanel {
     }
 
     /**
-     * Añade un mini-item al contenedor (máximo 2). controla referencias left/right usadas para actualizar valores.
+     * Añade un mini-item al contenedor. No se utiliza cuando los items son automáticos por productos.
      */
     private void addItem() {
         if (listaItems.size() >= 2) {
@@ -899,7 +896,7 @@ public class ComprobanteFormView extends JPanel {
         }
         Font labelFont = new Font("Arial", Font.PLAIN, 14);
         boolean isLeft = listaItems.isEmpty();
-        JPanel mini = crearMiniItemPanel(isLeft ? "Item 1" : "Item 2", labelFont, isLeft);
+        JPanel mini = crearMiniItemPanel(isLeft ? "Item 1" : "Item 2", labelFont, isLeft, 0.0);
         listaItems.add(mini);
         itemsContainer.add(mini);
         itemsContainer.revalidate();
@@ -1099,10 +1096,10 @@ public class ComprobanteFormView extends JPanel {
     }
 
     /**
-     * Actualiza valores de la Sección 3 en base al SUBTOTAL TOTAL de la cotización completa y al selector de tipo de pago.
-     * - Monto de detracción = Subtotal total * 12% (redondeado a entero)
-     * - Monto neto = Subtotal total - Monto detracción
-     * - Monto de la cuota = Subtotal total - Monto detracción
+     * Actualiza valores de la Sección 3 en base al SUBTOTAL CON IGV de la cotización completa y al selector de tipo de pago.
+     * - Monto de detracción = Subtotal con IGV * 12% (redondeado a entero)
+     * - Monto neto = Subtotal con IGV - Monto detracción
+     * - Monto de la cuota = Subtotal con IGV - Monto detracción
      */
     private void actualizarSeccion3() {
         int fila = (tablaProductos != null) ? tablaProductos.getSelectedRow() : -1;
@@ -1113,11 +1110,11 @@ public class ComprobanteFormView extends JPanel {
             return;
         }
 
-        // usar el SUBTOTAL TOTAL de todos los productos
-        double subtotal = subtotalCotizacionCompleta;
+        // usar el SUBTOTAL CON IGV de todos los productos
+        double subtotalConIgv = subtotalConIgvCotizacion;
 
-        // Cálculo de detracción basado en SUBTOTAL TOTAL (no solo un producto)
-        long detrPorDefecto = Math.round(subtotal * 0.12); // redondeado al entero
+        // Cálculo de detracción basado en SUBTOTAL CON IGV
+        long detrPorDefecto = Math.round(subtotalConIgv * 0.12); // redondeado al entero
 
         // si el campo está vacío, rellenar con valor por defecto
         if (txtMontoDetraccion != null) {
@@ -1134,8 +1131,8 @@ public class ComprobanteFormView extends JPanel {
             if (!t.isEmpty()) montoDet = Double.parseDouble(t);
         } catch (Exception ignored) { montoDet = detrPorDefecto; }
 
-        // monto neto pendiente = subtotal total - montoDet
-        double montoNeto = subtotal - montoDet;
+        // monto neto pendiente = subtotal con IGV - montoDet
+        double montoNeto = subtotalConIgv - montoDet;
 
         // si campo neto está vacío, rellenar calculado (editable por usuario)
         if (txtMontoNetoPendiente != null) {
@@ -1165,7 +1162,7 @@ public class ComprobanteFormView extends JPanel {
             if (txtMontoNetoPendiente != null) txtMontoNetoPendiente.setVisible(true);
             if (txtMontoCuota != null) txtMontoCuota.setVisible(true);
         } else {
-            // ocultar y limpiar campos de crédito para evitar que aparezcan en CONTADO/50/50
+            // ocultar y limpiar campos de crédito para evitar que aparezcan en CONTADO
             if (txtMontoNetoPendiente != null) {
                 txtMontoNetoPendiente.setVisible(false);
                 txtMontoNetoPendiente.setText("");
