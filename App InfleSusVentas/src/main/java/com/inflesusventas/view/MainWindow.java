@@ -2,6 +2,7 @@ package com.inflesusventas.view;
 
 import com.inflesusventas.controller.CotizacionController;
 import com.inflesusventas.view.cotizacion.CotizacionFormView;
+import com.inflesusventas.view.comprobante.ComprobanteFormView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -247,6 +248,10 @@ public class MainWindow extends JFrame {
     
     private void mostrarComprobantes() {
         mostrarEnConstruccion("Módulo de Comprobantes Electrónicos");
+        panelContenido.removeAll();
+        panelContenido.add(new ComprobanteFormView(cotizacionController));
+        panelContenido.revalidate();
+        panelContenido.repaint();
     }
     
     private void mostrarGuias() {
