@@ -11,6 +11,21 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
+
+import com.inflesusventas.service.PdfGeneratorService;
+import com.inflesusventas.service.PdfGeneratorService.DatosFacturaPDF;
+import com.inflesusventas.service.XmlGeneratorService;
+import com.inflesusventas.service.XmlGeneratorService.DatosFacturaElectronica;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Vista para crear facturas a partir de la cotización actual en memoria.
  * Reescrita para seguir estilo de CotizacionFormView (panel principal con secciones apiladas).
@@ -22,6 +37,9 @@ public class ComprobanteFormView extends JPanel {
     private static final Color COLOR_NARANJA = new Color(230,130,70);
 
     private final CotizacionController cotizacionController;
+
+    // Lista para guardar TODAS las cotizaciones creadas
+    private java.util.List<Cotizacion> listaCotizaciones = new java.util.ArrayList<>();
 
     // Tabla de productos
     private JTable tablaProductos;
@@ -80,8 +98,19 @@ public class ComprobanteFormView extends JPanel {
     private JLabel lblVencLabel;
     private JLabel lblMontoCuotaLabel;
 
+    private PdfGeneratorService pdfService;
+    private XmlGeneratorService xmlService;
+
+    // Conjunto para rastrear cotizaciones ya facturadas
+    private java.util.Set<Integer> cotizacionesFacturadas = new java.util.HashSet<>();
+
+    // Mapa para guardar los IDs de factura generados por cotización
+    private java.util.Map<Integer, String> mapaIdFacturas = new java.util.HashMap<>();
+
     public ComprobanteFormView(CotizacionController cotizacionController) {
         this.cotizacionController = cotizacionController;
+        this.pdfService = new PdfGeneratorService();
+        this.xmlService = new XmlGeneratorService();
         inicializarComponentes();
         cargarProductosDesdeCotizacion();
     }
@@ -116,9 +145,7 @@ public class ComprobanteFormView extends JPanel {
         btnGenerarComprobante = new JButton("GENERAR COMPROBANTE ELECTRÓNICO");
         btnGenerarComprobante.setFont(new Font("Arial", Font.BOLD, 14));
         btnGenerarComprobante.setPreferredSize(new Dimension(340, 38));
-        btnGenerarComprobante.addActionListener(e -> {
-            // no-op por el momento
-        });
+        btnGenerarComprobante.addActionListener(e -> generarFacturaElectronica());
         botonPanel.add(btnGenerarComprobante);
         panelPrincipal.add(Box.createVerticalStrut(12));
         panelPrincipal.add(botonPanel);
@@ -149,58 +176,104 @@ public class ComprobanteFormView extends JPanel {
     private JPanel crearSeccionTablaProductos() {
         JPanel panel = crearPanelSeccion("Productos de la Cotización - Selecciona para procesar");
 
-        // columnas incluyendo RUC cliente
-        String[] columnas = {"Código", "Descripción", "RUC Cliente", "Cantidad", "Unidad", "P. Unit. (S/)", "Subtotal (S/)", "Condición"};
+        // Nuevas columnas con ID de Factura
+        String[] columnas = {"ID Factura", "RUC Cliente", "Razón Social", "Productos", "Subtotal (S/)", "Condición"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
-            @Override public boolean isCellEditable(int row, int column) { return false; }
+            @Override 
+            public boolean isCellEditable(int row, int column) { 
+                return false; 
+            }
         };
 
         tablaProductos = new JTable(modeloTabla);
         tablaProductos.setFont(new Font("Arial", Font.PLAIN, 13));
-        tablaProductos.setRowHeight(26);
+        tablaProductos.setRowHeight(80); // Altura mayor para mostrar múltiples productos
         tablaProductos.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        
+        // Configurar renderizador para mostrar saltos de línea en la columna "Productos"
+        tablaProductos.getColumnModel().getColumn(3).setCellRenderer(new MultiLineTableCellRenderer());
+        
+        // Ajustar anchos de columnas
+        tablaProductos.getColumnModel().getColumn(0).setPreferredWidth(150); // ID Factura
+        tablaProductos.getColumnModel().getColumn(1).setPreferredWidth(120); // RUC
+        tablaProductos.getColumnModel().getColumn(2).setPreferredWidth(200); // Razón Social
+        tablaProductos.getColumnModel().getColumn(3).setPreferredWidth(300); // Productos (más ancho)
+        tablaProductos.getColumnModel().getColumn(4).setPreferredWidth(100); // Subtotal
+        tablaProductos.getColumnModel().getColumn(5).setPreferredWidth(100); // Condición
 
         JScrollPane scrollTabla = new JScrollPane(tablaProductos);
-        // Guardamos referencia y ajustamos alto según filas
         scrollTablaProductos = scrollTabla;
         ajustarAltoTabla();
         panel.add(scrollTablaProductos, BorderLayout.CENTER);
 
-        // Listener selección - cuando seleccione cualquier fila, procesa TODA la cotización
+        // Listener selección
         tablaProductos.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    int fila = tablaProductos.getSelectedRow();
-                    boolean seleccionado = fila != -1;
-                    mostrarSecciones(seleccionado);
-                    if (seleccionado) {
-                        poblarSeccion1DesdeCotizacion();
-                        poblarSeccion2SegunCondicion();
-                        // actualizar sección 3 con los valores del subtotal total de la cotización
-                        actualizarSeccion3();
+        @Override 
+        public void valueChanged(ListSelectionEvent e) {
+            if (!e.getValueIsAdjusting()) {
+                int fila = tablaProductos.getSelectedRow();
+                boolean seleccionado = fila != -1;
+                
+                if (seleccionado && fila < listaCotizaciones.size()) {
+                    // Verificar si esta cotización ya fue facturada (usando ÍNDICE)
+                    if (cotizacionesFacturadas.contains(fila)) {
+                        // Ya fue facturada - BLOQUEAR
+                        mostrarSecciones(false);
+                        JOptionPane.showMessageDialog(ComprobanteFormView.this,
+                            "⚠️ Esta cotización ya tiene una factura emitida.\n\n" +
+                            "ID Factura: " + mapaIdFacturas.get(fila) + "\n\n" +
+                            "No se puede volver a facturar.",
+                            "Factura ya emitida",
+                            JOptionPane.WARNING_MESSAGE);
+                        tablaProductos.clearSelection();
+                    } else {
+                        // No ha sido facturada - PERMITIR
+                        // Cargar datos de la cotización seleccionada
+                        Cotizacion cotizacionSeleccionada = listaCotizaciones.get(fila);
+                        cargarDatosCotizacionSeleccionada(cotizacionSeleccionada);
+                        
+                        mostrarSecciones(true);
+                        poblarSeccion1DesdeCotizacion(cotizacionSeleccionada);
+                        poblarSeccion2SegunCondicion(cotizacionSeleccionada);
+                        actualizarSeccion3(cotizacionSeleccionada);
                     }
+                } else {
+                    mostrarSecciones(false);
                 }
             }
-        });
-
+        }
+    });
         return panel;
     }
 
+    /**
+     * Carga los datos de la cotización seleccionada en las secciones
+     */
+    private void cargarDatosCotizacionSeleccionada(Cotizacion cotizacion) {
+        // Calcular subtotal con IGV de ESTA cotización
+        subtotalConIgvCotizacion = 0.0;
+        for (ProductoCotizacion p : cotizacion.getProductos()) {
+            subtotalConIgvCotizacion += p.getSubtotal();
+        }
+        subtotalConIgvCotizacion *= 1.18;
+    }
+
     private JPanel crearSeccion1() {
-        // Creamos panel sin título (el usuario pidió eliminar el título de la primera sección)
+        // Panel sin título
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(COLOR_FONDO, 2),
                 BorderFactory.createEmptyBorder(16, 16, 16, 16)
         ));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 420));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 280)); // Altura reducida
 
         GridBagConstraints gbcMainHeader = new GridBagConstraints();
         gbcMainHeader.insets = new Insets(6, 6, 12, 6);
         gbcMainHeader.fill = GridBagConstraints.HORIZONTAL;
         gbcMainHeader.anchor = GridBagConstraints.WEST;
-        // Selector de forma de pago (DECIDE SINGLE / DOUBLE)
+        
+        // Selector de forma de pago
         JLabel lblForma = new JLabel("Forma de pago:");
         lblForma.setFont(new Font("Arial", Font.BOLD, 14));
         gbcMainHeader.gridx = 0;
@@ -218,17 +291,13 @@ public class ComprobanteFormView extends JPanel {
         panel.add(cmbFormaPagoSelector, gbcMainHeader);
         gbcMainHeader.gridwidth = 1;
 
-        // Cuando cambie el selector, si hay fila seleccionada, actualizar secciones 2 y 3
         cmbFormaPagoSelector.addActionListener(e -> {
             if (tablaProductos != null && tablaProductos.getSelectedRow() != -1) {
                 poblarSeccion2SegunCondicion();
             }
-            // siempre actualizar sección 3 (muestra/oculta info de crédito)
             actualizarSeccion3();
         });
 
-        // Ajustar grid start row para el resto de inputs (comenzar en row = 1)
-        // reusamos la lógica siguiente para añadir el resto de campos (continuará abajo)
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 10, 8, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -236,35 +305,8 @@ public class ComprobanteFormView extends JPanel {
         Font labelFont = new Font("Arial", Font.PLAIN, 14);
         int row = 1;
 
-        // ahora añadimos el resto de campos exactamente como estaban (iniciando en row=1)
-
-        // Detracción
-        JLabel lblDet = new JLabel("Operaciones sujetas a detracción:");
-        lblDet.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0.35;
-        panel.add(lblDet, gbc);
-
-        rdoDetraccionSi = new JRadioButton("SI");
-        rdoDetraccionNo = new JRadioButton("NO");
-        rdoDetraccionSi.setFont(labelFont);
-        rdoDetraccionNo.setFont(labelFont);
-        ButtonGroup bgDet = new ButtonGroup();
-        bgDet.add(rdoDetraccionSi);
-        bgDet.add(rdoDetraccionNo);
-        rdoDetraccionSi.setSelected(true);
-
-        JPanel pnlDet = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlDet.setBackground(Color.WHITE);
-        pnlDet.add(rdoDetraccionSi);
-        pnlDet.add(rdoDetraccionNo);
-        pnlDet.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        gbc.weightx = 0.65;
-        panel.add(pnlDet, gbc);
-
+        // ========== CAMPOS VISIBLES ==========
+        
         // RUC cliente
         JLabel lblRuc = new JLabel("RUC del Cliente:");
         lblRuc.setFont(labelFont);
@@ -296,127 +338,6 @@ public class ComprobanteFormView extends JPanel {
         gbc.weightx = 0.65;
         panel.add(txtRazonSocial, gbc);
 
-        // Pago anticipado
-        JLabel lblPago = new JLabel("Pago Anticipado:");
-        lblPago.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0.35;
-        panel.add(lblPago, gbc);
-
-        rdoPagoAnticipadoSi = new JRadioButton("SI");
-        rdoPagoAnticipadoNo = new JRadioButton("NO");
-        rdoPagoAnticipadoSi.setFont(labelFont);
-        rdoPagoAnticipadoNo.setFont(labelFont);
-        ButtonGroup bgPagoAnt = new ButtonGroup();
-        bgPagoAnt.add(rdoPagoAnticipadoSi);
-        bgPagoAnt.add(rdoPagoAnticipadoNo);
-        rdoPagoAnticipadoNo.setSelected(true);
-
-        JPanel pnlPago = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlPago.setBackground(Color.WHITE);
-        pnlPago.add(rdoPagoAnticipadoSi);
-        pnlPago.add(rdoPagoAnticipadoNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlPago, gbc);
-
-        // Emisor itinerante
-        JLabel lblIt = new JLabel("Emisor Itinerante:");
-        lblIt.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblIt, gbc);
-
-        rdoEmisorItineranteSi = new JRadioButton("SI");
-        rdoEmisorItineranteNo = new JRadioButton("NO");
-        rdoEmisorItineranteSi.setFont(labelFont);
-        rdoEmisorItineranteNo.setFont(labelFont);
-        ButtonGroup bgIt = new ButtonGroup();
-        bgIt.add(rdoEmisorItineranteSi);
-        bgIt.add(rdoEmisorItineranteNo);
-        rdoEmisorItineranteNo.setSelected(true);
-
-        JPanel pnlIt = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlIt.setBackground(Color.WHITE);
-        pnlIt.add(rdoEmisorItineranteSi);
-        pnlIt.add(rdoEmisorItineranteNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlIt, gbc);
-
-        // Establecimiento del emisor
-        JLabel lblEst = new JLabel("Establecimiento del Emisor:");
-        lblEst.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblEst, gbc);
-
-        rdoEstablecimientoSi = new JRadioButton("SI");
-        rdoEstablecimientoNo = new JRadioButton("NO");
-        rdoEstablecimientoSi.setFont(labelFont);
-        rdoEstablecimientoNo.setFont(labelFont);
-        ButtonGroup bgEst = new ButtonGroup();
-        bgEst.add(rdoEstablecimientoSi);
-        bgEst.add(rdoEstablecimientoNo);
-        rdoEstablecimientoNo.setSelected(true);
-
-        JPanel pnlEst = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlEst.setBackground(Color.WHITE);
-        pnlEst.add(rdoEstablecimientoSi);
-        pnlEst.add(rdoEstablecimientoNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlEst, gbc);
-
-        // Consigne direccion
-        JLabel lblCons = new JLabel("Consigne la dirección donde se brinde el servicio:");
-        lblCons.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblCons, gbc);
-
-        rdoConsigneDireccionSi = new JRadioButton("SI");
-        rdoConsigneDireccionNo = new JRadioButton("NO");
-        rdoConsigneDireccionSi.setFont(labelFont);
-        rdoConsigneDireccionNo.setFont(labelFont);
-        ButtonGroup bgCons = new ButtonGroup();
-        bgCons.add(rdoConsigneDireccionSi);
-        bgCons.add(rdoConsigneDireccionNo);
-        rdoConsigneDireccionSi.setSelected(true);
-
-        JPanel pnlCons = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlCons.setBackground(Color.WHITE);
-        pnlCons.add(rdoConsigneDireccionSi);
-        pnlCons.add(rdoConsigneDireccionNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlCons, gbc);
-
-        // Venta combustible
-        JLabel lblComb = new JLabel("Venta de combustible / mantenimiento vehicular:");
-        lblComb.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblComb, gbc);
-
-        rdoVentaCombustibleSi = new JRadioButton("SI");
-        rdoVentaCombustibleNo = new JRadioButton("NO");
-        rdoVentaCombustibleSi.setFont(labelFont);
-        rdoVentaCombustibleNo.setFont(labelFont);
-        ButtonGroup bgComb = new ButtonGroup();
-        bgComb.add(rdoVentaCombustibleSi);
-        bgComb.add(rdoVentaCombustibleNo);
-        rdoVentaCombustibleNo.setSelected(true);
-
-        JPanel pnlComb = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlComb.setBackground(Color.WHITE);
-        pnlComb.add(rdoVentaCombustibleSi);
-        pnlComb.add(rdoVentaCombustibleNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlComb, gbc);
-
         // Moneda
         JLabel lblMon = new JLabel("Moneda de la factura:");
         lblMon.setFont(labelFont);
@@ -430,101 +351,88 @@ public class ComprobanteFormView extends JPanel {
         gbc.gridy = row++;
         panel.add(cmbMoneda, gbc);
 
-        // Descuentos
-        JLabel lblDesc = new JLabel("La factura tiene Descuentos / Deduce anticipos:");
-        lblDesc.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblDesc, gbc);
+        // ========== INICIALIZAR VARIABLES OCULTAS CON VALORES POR DEFECTO ==========
+        // Estos componentes existen en memoria pero NO se muestran visualmente
+        
+        // Detracción - POR DEFECTO: SÍ
+        rdoDetraccionSi = new JRadioButton("SI");
+        rdoDetraccionNo = new JRadioButton("NO");
+        ButtonGroup bgDet = new ButtonGroup();
+        bgDet.add(rdoDetraccionSi);
+        bgDet.add(rdoDetraccionNo);
+        rdoDetraccionSi.setSelected(true); // Por defecto SÍ
 
+        // Pago anticipado - POR DEFECTO: NO
+        rdoPagoAnticipadoSi = new JRadioButton("SI");
+        rdoPagoAnticipadoNo = new JRadioButton("NO");
+        ButtonGroup bgPagoAnt = new ButtonGroup();
+        bgPagoAnt.add(rdoPagoAnticipadoSi);
+        bgPagoAnt.add(rdoPagoAnticipadoNo);
+        rdoPagoAnticipadoNo.setSelected(true); // Por defecto NO
+
+        // Emisor itinerante - POR DEFECTO: NO
+        rdoEmisorItineranteSi = new JRadioButton("SI");
+        rdoEmisorItineranteNo = new JRadioButton("NO");
+        ButtonGroup bgIt = new ButtonGroup();
+        bgIt.add(rdoEmisorItineranteSi);
+        bgIt.add(rdoEmisorItineranteNo);
+        rdoEmisorItineranteNo.setSelected(true); // Por defecto NO
+
+        // Establecimiento del emisor - POR DEFECTO: NO
+        rdoEstablecimientoSi = new JRadioButton("SI");
+        rdoEstablecimientoNo = new JRadioButton("NO");
+        ButtonGroup bgEst = new ButtonGroup();
+        bgEst.add(rdoEstablecimientoSi);
+        bgEst.add(rdoEstablecimientoNo);
+        rdoEstablecimientoNo.setSelected(true); // Por defecto NO
+
+        // Consigne dirección - POR DEFECTO: SÍ
+        rdoConsigneDireccionSi = new JRadioButton("SI");
+        rdoConsigneDireccionNo = new JRadioButton("NO");
+        ButtonGroup bgCons = new ButtonGroup();
+        bgCons.add(rdoConsigneDireccionSi);
+        bgCons.add(rdoConsigneDireccionNo);
+        rdoConsigneDireccionSi.setSelected(true); // Por defecto SÍ
+
+        // Venta combustible - POR DEFECTO: NO
+        rdoVentaCombustibleSi = new JRadioButton("SI");
+        rdoVentaCombustibleNo = new JRadioButton("NO");
+        ButtonGroup bgComb = new ButtonGroup();
+        bgComb.add(rdoVentaCombustibleSi);
+        bgComb.add(rdoVentaCombustibleNo);
+        rdoVentaCombustibleNo.setSelected(true); // Por defecto NO
+
+        // Descuentos - POR DEFECTO: NO
         rdoDescuentosSi = new JRadioButton("SI");
         rdoDescuentosNo = new JRadioButton("NO");
-        rdoDescuentosSi.setFont(labelFont);
-        rdoDescuentosNo.setFont(labelFont);
         ButtonGroup bgDesc = new ButtonGroup();
         bgDesc.add(rdoDescuentosSi);
         bgDesc.add(rdoDescuentosNo);
-        rdoDescuentosNo.setSelected(true);
+        rdoDescuentosNo.setSelected(true); // Por defecto NO
 
-        JPanel pnlDesc = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlDesc.setBackground(Color.WHITE);
-        pnlDesc.add(rdoDescuentosSi);
-        pnlDesc.add(rdoDescuentosNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlDesc, gbc);
-
-        // ISC
-        JLabel lblIsc = new JLabel("La factura tiene ISC:");
-        lblIsc.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblIsc, gbc);
-
+        // ISC - POR DEFECTO: NO
         rdoIscSi = new JRadioButton("SI");
         rdoIscNo = new JRadioButton("NO");
-        rdoIscSi.setFont(labelFont);
-        rdoIscNo.setFont(labelFont);
         ButtonGroup bgIsc = new ButtonGroup();
         bgIsc.add(rdoIscSi);
         bgIsc.add(rdoIscNo);
-        rdoIscNo.setSelected(true);
+        rdoIscNo.setSelected(true); // Por defecto NO
 
-        JPanel pnlIsc = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlIsc.setBackground(Color.WHITE);
-        pnlIsc.add(rdoIscSi);
-        pnlIsc.add(rdoIscNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlIsc, gbc);
-
-        // Operaciones gratuitas
-        JLabel lblGrat = new JLabel("Operaciones Gratuitas:");
-        lblGrat.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblGrat, gbc);
-
+        // Operaciones gratuitas - POR DEFECTO: NO
         rdoOperacionesGratuitasSi = new JRadioButton("SI");
         rdoOperacionesGratuitasNo = new JRadioButton("NO");
-        rdoOperacionesGratuitasSi.setFont(labelFont);
-        rdoOperacionesGratuitasNo.setFont(labelFont);
         ButtonGroup bgGrat = new ButtonGroup();
         bgGrat.add(rdoOperacionesGratuitasSi);
         bgGrat.add(rdoOperacionesGratuitasNo);
-        rdoOperacionesGratuitasNo.setSelected(true);
+        rdoOperacionesGratuitasNo.setSelected(true); // Por defecto NO
 
-        JPanel pnlGrat = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlGrat.setBackground(Color.WHITE);
-        pnlGrat.add(rdoOperacionesGratuitasSi);
-        pnlGrat.add(rdoOperacionesGratuitasNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlGrat, gbc);
-
-        // Cargos/tributos fuera IGV
-        JLabel lblCargos = new JLabel("Cargos/tributos fuera del IGV:");
-        lblCargos.setFont(labelFont);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(lblCargos, gbc);
-
+        // Cargos/tributos - POR DEFECTO: NO
         rdoCargosTributosSi = new JRadioButton("SI");
         rdoCargosTributosNo = new JRadioButton("NO");
-        rdoCargosTributosSi.setFont(labelFont);
-        rdoCargosTributosNo.setFont(labelFont);
         ButtonGroup bgCargos = new ButtonGroup();
         bgCargos.add(rdoCargosTributosSi);
         bgCargos.add(rdoCargosTributosNo);
-        rdoCargosTributosNo.setSelected(true);
-
-        JPanel pnlCargos = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        pnlCargos.setBackground(Color.WHITE);
-        pnlCargos.add(rdoCargosTributosSi);
-        pnlCargos.add(rdoCargosTributosNo);
-        gbc.gridx = 1;
-        gbc.gridy = row++;
-        panel.add(pnlCargos, gbc);
+        rdoCargosTributosNo.setSelected(true); // Por defecto NO
 
         return panel;
     }
@@ -564,45 +472,104 @@ public class ComprobanteFormView extends JPanel {
     }
 
     public void cargarProductosDesdeCotizacion() {
-        modeloTabla.setRowCount(0);
-        subtotalConIgvCotizacion = 0.0; // reinicializar
-        Cotizacion cotizacion = cotizacionController.getCotizacionActual();
-        if (cotizacion == null || cotizacion.getProductos() == null || cotizacion.getProductos().isEmpty()) {
-            ajustarAltoTabla();
+        // Obtener cotización actual del controlador
+        Cotizacion cotizacionActual = cotizacionController.getCotizacionActual();
+        
+        if (cotizacionActual == null || cotizacionActual.getProductos() == null || 
+            cotizacionActual.getProductos().isEmpty()) {
             return;
         }
-        String condicionPago = (cotizacion.getCondicionPago() == null) ? "-" : cotizacion.getCondicionPago().toString();
+        
+        // Verificar si esta cotización ya está en la lista (comparar por número o ID)
+        boolean yaExiste = false;
+        for (Cotizacion cot : listaCotizaciones) {
+            if (cot.getNumeroCotizacion() == cotizacionActual.getNumeroCotizacion()) {
+                yaExiste = true;
+                break;
+            }
+        }
+        
+        // Si es nueva, agregarla a la lista
+        if (!yaExiste) {
+            listaCotizaciones.add(cotizacionActual);
+            System.out.println("✓ Nueva cotización agregada. Total: " + listaCotizaciones.size());
+        }
+        
+        // Recargar toda la tabla con TODAS las cotizaciones
+        refrescarTablaCompleta();
+    }
+
+    /**
+     * Recarga la tabla mostrando TODAS las cotizaciones almacenadas
+     */
+    private void refrescarTablaCompleta() {
+        modeloTabla.setRowCount(0); // Limpiar tabla
+        subtotalConIgvCotizacion = 0.0;
+        
+        // Agregar cada cotización a la tabla
+        for (int i = 0; i < listaCotizaciones.size(); i++) {
+            Cotizacion cotizacion = listaCotizaciones.get(i);
+            agregarCotizacionATabla(cotizacion, i);
+        }
+        
+        ajustarAltoTabla();
+    }
+
+    /**
+     * Agrega una cotización individual a la tabla
+     * @param cotizacion La cotización a agregar
+     * @param indice Posición en la lista (usado como ID interno)
+     */
+    private void agregarCotizacionATabla(Cotizacion cotizacion, int indice) {
         List<ProductoCotizacion> productos = cotizacion.getProductos();
+        double subtotalSinIgv = 0.0;
+        
+        for (ProductoCotizacion p : productos) {
+            subtotalSinIgv += p.getSubtotal();
+        }
+        
+        // Datos del cliente
         String ruc = (cotizacion.getCliente() != null && cotizacion.getCliente().getRuc() != null)
                 ? cotizacion.getCliente().getRuc() : "-";
+        String razonSocial = (cotizacion.getCliente() != null && cotizacion.getCliente().getRazonSocial() != null)
+                ? cotizacion.getCliente().getRazonSocial() : "-";
+        String condicionPago = (cotizacion.getCondicionPago() == null) 
+                ? "-" : cotizacion.getCondicionPago().toString();
         
-        // calcular subtotal con IGV
-        for (ProductoCotizacion p : productos) {
-            // Calcular subtotal con IGV (asumiendo 18% de IGV)
-            double subtotalConIgv = p.getSubtotal() * 1.18;
-            subtotalConIgvCotizacion += subtotalConIgv;
+        // Verificar si ya tiene factura emitida (usando ÍNDICE como ID)
+        String idFactura;
+        
+        if (cotizacionesFacturadas.contains(indice)) {
+            // Ya tiene factura
+            idFactura = mapaIdFacturas.get(indice);
+            condicionPago = condicionPago + " ✓ FACTURADA";
+        } else {
+            // Sin factura
+            idFactura = "Pendiente de emisión";
         }
         
-        for (ProductoCotizacion p : productos) {
-            Object[] fila = new Object[] {
-                    safeToString(p.getCodigo()),
-                    safeToString(p.getDescripcion()),
-                    ruc,
-                    p.getCantidad(),
-                    safeToString(p.getUnidadMedida()),
-                    String.format("%.2f", p.getPrecioBase()),
-                    String.format("%.2f", p.getSubtotal()),
-                    condicionPago
-            };
-            modeloTabla.addRow(fila);
+        // Construir lista de productos
+        StringBuilder listaProductos = new StringBuilder();
+        listaProductos.append("<html>");
+        for (int i = 0; i < productos.size(); i++) {
+            ProductoCotizacion p = productos.get(i);
+            listaProductos.append("• ").append(p.getDescripcion());
+            if (i < productos.size() - 1) {
+                listaProductos.append("<br>");
+            }
         }
-        // ajustar alto de la tabla según filas cargadas
-        ajustarAltoTabla();
-        // actualizar secciones dependientes si hay selección
-        if (tablaProductos.getSelectedRow() != -1) {
-            poblarSeccion2SegunCondicion();
-            actualizarSeccion3();
-        }
+        listaProductos.append("</html>");
+        
+        Object[] fila = new Object[] {
+            idFactura,
+            ruc,
+            razonSocial,
+            listaProductos.toString(),
+            String.format("%.2f", subtotalSinIgv),
+            condicionPago
+        };
+        
+        modeloTabla.addRow(fila);
     }
 
     /**
@@ -622,20 +589,33 @@ public class ComprobanteFormView extends JPanel {
         scrollTablaProductos.revalidate();
     }
 
+    private void poblarSeccion1DesdeCotizacion(Cotizacion cotizacion) {
+        if (cotizacion == null) return;
+        
+        if (cotizacion.getCliente() != null) {
+            if (cotizacion.getCliente().getRuc() != null) {
+                txtRucCliente.setText(cotizacion.getCliente().getRuc());
+            } else {
+                txtRucCliente.setText("");
+            }
+            if (cotizacion.getCliente().getRazonSocial() != null) {
+                txtRazonSocial.setText(cotizacion.getCliente().getRazonSocial());
+            } else {
+                txtRazonSocial.setText("");
+            }
+        }
+    }
+
     private void poblarSeccion1DesdeCotizacion() {
         Cotizacion ctz = cotizacionController.getCotizacionActual();
-        if (ctz == null) return;
-        if (ctz.getCliente() != null && ctz.getCliente().getRuc() != null) {
-            txtRucCliente.setText(ctz.getCliente().getRuc());
-        } else {
-            txtRucCliente.setText("");
-        }
-        // valores por defecto ya inicializados en los componentes
+        poblarSeccion1DesdeCotizacion(ctz);
     }
 
     private String safeToString(Object o) { return (o == null) ? "-" : o.toString(); }
 
-    public void refrescar() { cargarProductosDesdeCotizacion(); }
+    public void refrescar() { 
+        cargarProductosDesdeCotizacion(); 
+    }
 
     // getters para valores de la sección 1 (usará el controlador/servicio después)
     public boolean isDetraccion() { return rdoDetraccionSi != null && rdoDetraccionSi.isSelected(); }
@@ -650,6 +630,20 @@ public class ComprobanteFormView extends JPanel {
     public boolean isIsc() { return rdoIscSi != null && rdoIscSi.isSelected(); }
     public boolean isOperacionesGratuitas() { return rdoOperacionesGratuitasSi != null && rdoOperacionesGratuitasSi.isSelected(); }
     public boolean isCargosTributos() { return rdoCargosTributosSi != null && rdoCargosTributosSi.isSelected(); }
+
+    /**
+     * Genera el ID de factura en formato: RUC-SERIE-NUMERO
+     * Ejemplo: 20456789012-F001-00000001
+     */
+    private String generarIdFactura(String rucCliente) {
+        String serie = "F001";
+        int numero = obtenerSiguienteNumero();
+        
+        return String.format("%s-%s-%08d", 
+            rucCliente, 
+            serie, 
+            numero);
+    }
 
     /**
      * Crea la Sección 2 (inputs dinámicos según condición de pago).
@@ -791,39 +785,39 @@ public class ComprobanteFormView extends JPanel {
       * Rellena / adapta la Sección 2 según la condición de pago de la cotización.
       * Crea items automáticamente según la cantidad de productos diferentes.
       */
-    private void poblarSeccion2SegunCondicion() {
-        int fila = tablaProductos.getSelectedRow();
-        if (fila == -1) return;
-
-        // fecha por defecto
+    private void poblarSeccion2SegunCondicion(Cotizacion cotizacion) {
+        if (cotizacion == null) return;
+        
         spFechaEmision.setValue(new java.util.Date());
-
-        // Limpiar items anteriores
+        
         listaItems.clear();
         if (itemsContainer != null) {
             itemsContainer.removeAll();
         }
-
-        // Crear un item por cada producto diferente
-        Cotizacion cotizacion = cotizacionController.getCotizacionActual();
-        if (cotizacion != null && cotizacion.getProductos() != null) {
-            List<ProductoCotizacion> productos = cotizacion.getProductos();
-            Font labelFont = new Font("Arial", Font.PLAIN, 14);
-            
-            for (int i = 0; i < productos.size(); i++) {
-                ProductoCotizacion producto = productos.get(i);
-                // Crear item con la descripción del producto
-                JPanel mini = crearMiniItemPanel(producto.getDescripcion(), labelFont, i == 0, producto.getSubtotal());
-                listaItems.add(mini);
-                if (itemsContainer != null) {
-                    itemsContainer.add(mini);
-                }
+        
+        List<ProductoCotizacion> productos = cotizacion.getProductos();
+        Font labelFont = new Font("Arial", Font.PLAIN, 14);
+        
+        for (int i = 0; i < productos.size(); i++) {
+            ProductoCotizacion producto = productos.get(i);
+            JPanel mini = crearMiniItemPanel(producto.getDescripcion(), labelFont, i == 0, producto.getSubtotal());
+            listaItems.add(mini);
+            if (itemsContainer != null) {
+                itemsContainer.add(mini);
             }
         }
-
+        
         if (itemsContainer != null) {
             itemsContainer.revalidate();
             itemsContainer.repaint();
+        }
+    }
+
+    // MANTENER el método sin parámetros para compatibilidad
+    private void poblarSeccion2SegunCondicion() {
+        int fila = tablaProductos.getSelectedRow();
+        if (fila != -1 && fila < listaCotizaciones.size()) {
+            poblarSeccion2SegunCondicion(listaCotizaciones.get(fila));
         }
     }
 
@@ -1013,68 +1007,66 @@ public class ComprobanteFormView extends JPanel {
      * - Monto neto = Subtotal con IGV - Monto detracción
      * - Monto de la cuota = Subtotal con IGV - Monto detracción
      */
-    private void actualizarSeccion3() {
-        int fila = (tablaProductos != null) ? tablaProductos.getSelectedRow() : -1;
-        if (fila == -1) {
+    private void actualizarSeccion3(Cotizacion cotizacion) {
+        if (cotizacion == null) {
             if (txtMontoDetraccion != null) txtMontoDetraccion.setText("");
             if (txtMontoNetoPendiente != null) txtMontoNetoPendiente.setText("");
             if (txtMontoCuota != null) txtMontoCuota.setText("");
             return;
         }
-
-        // usar el SUBTOTAL CON IGV de todos los productos
-        double subtotalConIgv = subtotalConIgvCotizacion;
-
-        // Cálculo de detracción basado en SUBTOTAL CON IGV
-        long detrPorDefecto = Math.round(subtotalConIgv * 0.12); // redondeado al entero
-
-        // si el campo está vacío, rellenar con valor por defecto
+        
+        // Calcular usando los datos de ESTA cotización
+        double subtotalConIgv = 0.0;
+        for (ProductoCotizacion p : cotizacion.getProductos()) {
+            subtotalConIgv += p.getSubtotal();
+        }
+        subtotalConIgv *= 1.18;
+        
+        long detrPorDefecto = Math.round(subtotalConIgv * 0.12);
+        
         if (txtMontoDetraccion != null) {
             String t = txtMontoDetraccion.getText();
             if (t == null || t.trim().isEmpty()) {
                 txtMontoDetraccion.setText(String.valueOf(detrPorDefecto));
             }
         }
-
-        // parse monto detracción (editable)
+        
         double montoDet = detrPorDefecto;
         try {
             String t = txtMontoDetraccion.getText().trim();
             if (!t.isEmpty()) montoDet = Double.parseDouble(t);
-        } catch (Exception ignored) { montoDet = detrPorDefecto; }
-
-        // monto neto pendiente = subtotal con IGV - montoDet
+        } catch (Exception ignored) { 
+            montoDet = detrPorDefecto; 
+        }
+        
         double montoNeto = subtotalConIgv - montoDet;
-
-        // si campo neto está vacío, rellenar calculado (editable por usuario)
+        
         if (txtMontoNetoPendiente != null) {
             String t = txtMontoNetoPendiente.getText();
             if (t == null || t.trim().isEmpty()) {
                 txtMontoNetoPendiente.setText(String.format("%.2f", montoNeto));
             }
         }
-
-        // cuota por defecto = montoNeto (editable por usuario)
+        
         if (txtMontoCuota != null) {
             String t = txtMontoCuota.getText();
             if (t == null || t.trim().isEmpty()) {
                 txtMontoCuota.setText(String.format("%.2f", montoNeto));
             }
         }
-
-        // Mostrar u ocultar la parte de crédito según selector (solo CREDITO muestra info crédito)
+        
         String modo = (cmbFormaPagoSelector == null) ? "CONTADO" : ((String) cmbFormaPagoSelector.getSelectedItem());
         boolean esCredito = "CREDITO".equalsIgnoreCase(modo);
-
+        
         if (lblInfoCreditoSub != null) lblInfoCreditoSub.setVisible(esCredito);
         if (spFechaVencimiento != null) spFechaVencimiento.setVisible(esCredito);
         if (lblVencLabel != null) lblVencLabel.setVisible(esCredito);
         if (lblMontoCuotaLabel != null) lblMontoCuotaLabel.setVisible(esCredito);
+        
         if (esCredito) {
             if (txtMontoNetoPendiente != null) txtMontoNetoPendiente.setVisible(true);
             if (txtMontoCuota != null) txtMontoCuota.setVisible(true);
         } else {
-            // ocultar y limpiar campos de crédito para evitar que aparezcan en CONTADO
             if (txtMontoNetoPendiente != null) {
                 txtMontoNetoPendiente.setVisible(false);
                 txtMontoNetoPendiente.setText("");
@@ -1085,11 +1077,375 @@ public class ComprobanteFormView extends JPanel {
             }
             if (lblInfoCreditoSub != null) lblInfoCreditoSub.setVisible(false);
         }
-
-         // forzar repaint para cambios de visibilidad/valores
+        
         if (panelSeccion3 != null) {
             panelSeccion3.revalidate();
             panelSeccion3.repaint();
+        }
+    }
+
+    private void actualizarSeccion3() {
+        int fila = tablaProductos.getSelectedRow();
+        if (fila != -1 && fila < listaCotizaciones.size()) {
+            actualizarSeccion3(listaCotizaciones.get(fila));
+        }
+    }
+
+    /**
+     * Genera XML y PDF de la factura electrónica
+     */
+    private void generarFacturaElectronica() {
+        try {
+            int filaSeleccionada = tablaProductos.getSelectedRow();
+            
+            if (filaSeleccionada == -1) {
+                JOptionPane.showMessageDialog(this,
+                    "Seleccione una cotización de la tabla",
+                    "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Obtener la cotización seleccionada de la lista (NO del controlador)
+            if (filaSeleccionada >= listaCotizaciones.size()) {
+                JOptionPane.showMessageDialog(this,
+                    "Error: Cotización no encontrada",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            Cotizacion cotizacion = listaCotizaciones.get(filaSeleccionada);
+            
+            if (cotizacion.getProductos() == null || cotizacion.getProductos().isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "No hay productos para facturar",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Validar datos del cliente
+            String rucCliente = txtRucCliente.getText().trim();
+            String razonCliente = txtRazonSocial.getText().trim();
+            
+            if (rucCliente.isEmpty() || razonCliente.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "Complete RUC y Razón Social del cliente",
+                    "Datos incompletos",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Construir datos
+            DatosFacturaElectronica datosXML = new DatosFacturaElectronica();
+            configurarDatosComunes(datosXML, rucCliente, razonCliente);
+            
+            DatosFacturaPDF datosPDF = new DatosFacturaPDF();
+            configurarDatosComunes(datosPDF, rucCliente, razonCliente);
+            
+            // Mostrar progreso
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            btnGenerarComprobante.setEnabled(false);
+            btnGenerarComprobante.setText("GENERANDO XML Y PDF...");
+            
+            final int indiceCotizacion = filaSeleccionada; // Guardar el índice
+            
+            // Generar en hilo separado
+            new Thread(() -> {
+                String rutaXML = null;
+                String rutaPDF = null;
+                
+                try {
+                    rutaXML = xmlService.generarXMLFactura(cotizacion, datosXML);
+                    rutaPDF = pdfService.generarPdfFactura(cotizacion, datosPDF);
+                    
+                    // REGISTRAR como facturada usando ÍNDICE
+                    String idFacturaGenerado = String.format("%s-%s-%08d",
+                        datosXML.rucCliente,
+                        datosXML.serie,
+                        datosXML.numero);
+                    
+                    cotizacionesFacturadas.add(indiceCotizacion); // Usar índice
+                    mapaIdFacturas.put(indiceCotizacion, idFacturaGenerado); // Usar índice
+                    
+                    final String xmlFinal = rutaXML;
+                    final String pdfFinal = rutaPDF;
+                    
+                    SwingUtilities.invokeLater(() -> {
+                        restaurarBoton();
+                        
+                        // Actualizar la tabla COMPLETA
+                        refrescarTablaCompleta();
+                        
+                        mostrarSecciones(false);
+                        tablaProductos.clearSelection();
+                        
+                        mostrarDialogoExito(xmlFinal, pdfFinal);
+                    });
+                    
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        restaurarBoton();
+                        JOptionPane.showMessageDialog(this,
+                            "Error al generar factura:\n" + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                        ex.printStackTrace();
+                    });
+                }
+            }).start();
+            
+        } catch (Exception ex) {
+            restaurarBoton();
+            JOptionPane.showMessageDialog(this,
+                "Error inesperado: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Configura los datos comunes para XML (sobrecarga para DatosFacturaElectronica)
+     */
+    private void configurarDatosComunes(DatosFacturaElectronica datos, String rucCliente, String razonCliente) {
+        // Serie y número
+        datos.serie = "F001";
+        datos.numero = obtenerSiguienteNumero();
+        datos.fechaEmision = (Date) spFechaEmision.getValue();
+        
+        // Moneda
+        String monedaStr = (String) cmbMoneda.getSelectedItem();
+        datos.moneda = convertirMoneda(monedaStr);
+        
+        // Emisor (reemplaza con tus datos reales)
+        datos.rucEmisor = "20123456789";
+        datos.razonSocialEmisor = "InfleSusVentas SRL";
+        
+        // Cliente
+        datos.rucCliente = rucCliente;
+        datos.razonSocialCliente = razonCliente;
+        
+        // Detracción
+        if (isDetraccion()) {
+            try {
+                String txtDet = txtMontoDetraccion.getText().trim();
+                datos.montoDetraccion = txtDet.isEmpty() ? 0 : Double.parseDouble(txtDet);
+                datos.porcentajeDetraccion = 12.0;
+                datos.cuentaBancoNacion = txtNroCuentaBN.getText().trim();
+            } catch (NumberFormatException ex) {
+                datos.montoDetraccion = 0;
+            }
+        }
+        
+        // Crédito
+        String formaPago = (String) cmbFormaPagoSelector.getSelectedItem();
+        datos.esCredito = "CREDITO".equalsIgnoreCase(formaPago);
+        
+        if (datos.esCredito) {
+            try {
+                String txtNeto = txtMontoNetoPendiente.getText().trim();
+                datos.montoNetoPendiente = txtNeto.isEmpty() ? 0 : Double.parseDouble(txtNeto);
+                
+                String txtCuota = txtMontoCuota.getText().trim();
+                datos.montoCuota = txtCuota.isEmpty() ? 0 : Double.parseDouble(txtCuota);
+                
+                datos.fechaVencimiento = (Date) spFechaVencimiento.getValue();
+            } catch (NumberFormatException ex) {
+                // valores por defecto
+            }
+        }
+    }
+
+    /**
+     * Configura los datos comunes para PDF (sobrecarga para DatosFacturaPDF)
+     */
+    private void configurarDatosComunes(DatosFacturaPDF datos, String rucCliente, String razonCliente) {
+        // Serie y número
+        datos.serie = "F001";
+        datos.numero = obtenerSiguienteNumero();
+        datos.fechaEmision = (Date) spFechaEmision.getValue();
+        
+        // Moneda
+        String monedaStr = (String) cmbMoneda.getSelectedItem();
+        datos.moneda = convertirMoneda(monedaStr);
+        
+        // Emisor
+        datos.rucEmisor = "20123456789";
+        datos.razonSocialEmisor = "InfleSusVentas SRL";
+        
+        // Cliente
+        datos.rucCliente = rucCliente;
+        datos.razonSocialCliente = razonCliente;
+        
+        // Detracción
+        if (isDetraccion()) {
+            try {
+                String txtDet = txtMontoDetraccion.getText().trim();
+                datos.montoDetraccion = txtDet.isEmpty() ? 0 : Double.parseDouble(txtDet);
+                datos.porcentajeDetraccion = 12.0;
+                datos.cuentaBancoNacion = txtNroCuentaBN.getText().trim();
+            } catch (NumberFormatException ex) {
+                datos.montoDetraccion = 0;
+            }
+        }
+        
+        // Crédito
+        String formaPago = (String) cmbFormaPagoSelector.getSelectedItem();
+        datos.esCredito = "CREDITO".equalsIgnoreCase(formaPago);
+        
+        if (datos.esCredito) {
+            try {
+                String txtNeto = txtMontoNetoPendiente.getText().trim();
+                datos.montoNetoPendiente = txtNeto.isEmpty() ? 0 : Double.parseDouble(txtNeto);
+                
+                String txtCuota = txtMontoCuota.getText().trim();
+                datos.montoCuota = txtCuota.isEmpty() ? 0 : Double.parseDouble(txtCuota);
+                
+                datos.fechaVencimiento = (Date) spFechaVencimiento.getValue();
+            } catch (NumberFormatException ex) {
+                // valores por defecto
+            }
+        }
+    }
+
+    /**
+     * Convierte nombre de moneda a código ISO
+     */
+    private String convertirMoneda(String moneda) {
+        if (moneda == null) return "PEN";
+        switch (moneda.toUpperCase()) {
+            case "SOLES": return "PEN";
+            case "DÓLARES": case "DOLARES": return "USD";
+            case "EUROS": return "EUR";
+            default: return "PEN";
+        }
+    }
+
+    /**
+     * Obtiene el siguiente número de factura
+     */
+    private int obtenerSiguienteNumero() {
+        // TODO: Implementar lógica con tu base de datos
+        // Por ahora retorna número basado en timestamp
+        return (int) (System.currentTimeMillis() % 100000);
+    }
+
+    /**
+     * Restaura el estado del botón
+     */
+    private void restaurarBoton() {
+        setCursor(Cursor.getDefaultCursor());
+        btnGenerarComprobante.setEnabled(true);
+        btnGenerarComprobante.setText("GENERAR COMPROBANTE ELECTRÓNICO");
+    }
+
+    /**
+     * Muestra diálogo de éxito con opciones para abrir archivos
+     */
+    private void mostrarDialogoExito(String rutaXML, String rutaPDF) {
+        Object[] opciones = {"Abrir PDF", "Abrir XML", "Ver Carpeta", "Cerrar"};
+        
+        int resultado = JOptionPane.showOptionDialog(
+            this,
+            "✅ Factura electrónica generada exitosamente\n\n" +
+            "XML: " + new File(rutaXML).getName() + "\n" +
+            "PDF: " + new File(rutaPDF).getName() + "\n\n" +
+            "¿Qué desea hacer?",
+            "Factura Generada",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.INFORMATION_MESSAGE,
+            null,
+            opciones,
+            opciones[0]
+        );
+        
+        switch (resultado) {
+            case 0: // Abrir PDF
+                abrirArchivo(rutaPDF);
+                break;
+            case 1: // Abrir XML
+                abrirArchivo(rutaXML);
+                break;
+            case 2: // Ver carpeta
+                abrirCarpeta(rutaPDF);
+                break;
+        }
+    }
+
+    /**
+     * Abre un archivo con la aplicación predeterminada
+     */
+    private void abrirArchivo(String ruta) {
+        try {
+            File archivo = new File(ruta);
+            if (archivo.exists() && Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(archivo);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "No se pudo abrir el archivo.\nUbicación: " + ruta,
+                "Aviso",
+                JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    /**
+     * Abre la carpeta que contiene el archivo
+     */
+    private void abrirCarpeta(String rutaArchivo) {
+        try {
+            File archivo = new File(rutaArchivo);
+            File carpeta = archivo.getParentFile();
+            
+            if (carpeta.exists() && Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(carpeta);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "No se pudo abrir la carpeta",
+                "Aviso",
+                JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    /**
+     * Renderizador personalizado para mostrar HTML en celdas (saltos de línea)
+     */
+    private static class MultiLineTableCellRenderer extends JTextArea implements javax.swing.table.TableCellRenderer {
+        
+        public MultiLineTableCellRenderer() {
+            setLineWrap(true);
+            setWrapStyleWord(true);
+            setOpaque(true);
+        }
+        
+        @Override
+        public java.awt.Component getTableCellRendererComponent(
+                JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            
+            if (value instanceof String) {
+                String texto = (String) value;
+                // Convertir HTML a texto plano con saltos de línea
+                texto = texto.replace("<html>", "").replace("</html>", "");
+                texto = texto.replace("<br>", "\n");
+                setText(texto);
+            } else {
+                setText(value != null ? value.toString() : "");
+            }
+            
+            if (isSelected) {
+                setBackground(table.getSelectionBackground());
+                setForeground(table.getSelectionForeground());
+            } else {
+                setBackground(table.getBackground());
+                setForeground(table.getForeground());
+            }
+            
+            setFont(table.getFont());
+            
+            return this;
         }
     }
 

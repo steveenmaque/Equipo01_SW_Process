@@ -5,9 +5,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Properties;
-
+import java.util.Date;
 import org.springframework.stereotype.Service;
 
 import com.inflesusventas.model.Cotizacion;
@@ -431,7 +432,350 @@ public class PdfGeneratorService {
     }
 
     public void generarCotizacionPdf(Cotizacion cotizacionActual, String rutaCompleta) {
-        // TODO Auto-generated method stub
+        // TODo Auto- generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'generarCotizacionPdf'");
+    }
+
+    /**
+     * Genera PDF de factura electrónica con diseño profesional
+     * Reutiliza el estilo de las cotizaciones
+     */
+    public String generarPdfFactura(Cotizacion cotizacion, DatosFacturaPDF datosFactura) throws Exception {
+        
+        String nombreArchivo = String.format("%s-%s-%08d.pdf",
+            datosFactura.rucEmisor,
+            datosFactura.serie,
+            datosFactura.numero);
+        
+        String rutaCompleta = "documentos/pdf/facturas/" + nombreArchivo;
+        
+        // Crear directorio si no existe
+        Files.createDirectories(Paths.get("documentos/pdf/facturas/"));
+        
+        // Crear el PDF
+        PdfWriter writer = new PdfWriter(rutaCompleta);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        Document document = new Document(pdfDoc, PageSize.A4);
+        document.setMargins(40, 40, 40, 40);
+        
+        // === CONTENIDO ===
+        agregarEncabezadoFactura(document, datosFactura);
+        agregarLineaSeparadora(document, colorPrimario);
+        agregarInformacionFactura(document, datosFactura);
+        agregarDatosClienteFactura(document, cotizacion, datosFactura);
+        agregarTablaProductosFactura(document, cotizacion);
+        agregarResumenMontosFactura(document, cotizacion, datosFactura);
+        
+        // Detracción y Crédito (si aplican)
+        if (datosFactura.montoDetraccion > 0) {
+            agregarInfoDetraccion(document, datosFactura);
+        }
+        if (datosFactura.esCredito) {
+            agregarInfoCredito(document, datosFactura);
+        }
+        
+        agregarPieFactura(document);
+        
+        document.close();
+        
+        System.out.println("✓ PDF Factura generado: " + nombreArchivo);
+        return rutaCompleta;
+    }
+
+    /**
+     * Encabezado específico para facturas
+     */
+    private void agregarEncabezadoFactura(Document document, DatosFacturaPDF datos) {
+        try {
+            Table headerTable = new Table(UnitValue.createPercentArray(new float[]{2, 3}));
+            headerTable.setWidth(UnitValue.createPercentValue(100));
+            
+            // Logo (reutiliza el código existente de cotizaciones)
+            Cell logoCell = new Cell();
+            File logoFile = new File(LOGO_PATH);
+            if (logoFile.exists()) {
+                Image logo = new Image(ImageDataFactory.create(LOGO_PATH));
+                logo.setWidth(120);
+                logo.setHeight(60);
+                logoCell.add(logo);
+            } else {
+                Paragraph nombreEmpresa = new Paragraph(datos.razonSocialEmisor)
+                    .setFontSize(18)
+                    .setBold()
+                    .setFontColor(colorPrimario);
+                logoCell.add(nombreEmpresa);
+            }
+            logoCell.setBorder(Border.NO_BORDER);
+            logoCell.setVerticalAlignment(VerticalAlignment.MIDDLE);
+            
+            // Información de la empresa
+            Cell infoCell = new Cell();
+            infoCell.add(new Paragraph(datos.razonSocialEmisor)
+                .setFontSize(14)
+                .setBold()
+                .setFontColor(colorPrimario));
+            infoCell.add(new Paragraph("RUC: " + datos.rucEmisor).setFontSize(10));
+            infoCell.add(new Paragraph(configuracion.getProperty("empresa.direccion", "")).setFontSize(9));
+            infoCell.add(new Paragraph("Tel: " + configuracion.getProperty("empresa.telefono", "")).setFontSize(9));
+            infoCell.add(new Paragraph("Email: " + configuracion.getProperty("empresa.email", "")).setFontSize(9));
+            infoCell.setBorder(Border.NO_BORDER);
+            infoCell.setTextAlignment(TextAlignment.RIGHT);
+            infoCell.setVerticalAlignment(VerticalAlignment.MIDDLE);
+            
+            headerTable.addCell(logoCell);
+            headerTable.addCell(infoCell);
+            
+            document.add(headerTable);
+            document.add(new Paragraph("\n"));
+            
+        } catch (Exception e) {
+            System.err.println("✗ Error al agregar encabezado: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Información de la factura (similar a cotización pero con "FACTURA ELECTRÓNICA")
+     */
+    private void agregarInformacionFactura(Document document, DatosFacturaPDF datos) {
+        // Título centrado
+        Paragraph titulo = new Paragraph("FACTURA ELECTRÓNICA")
+            .setFontSize(20)
+            .setBold()
+            .setFontColor(colorPrimario)
+            .setTextAlignment(TextAlignment.CENTER);
+        document.add(titulo);
+        
+        // Número y fecha
+        Table infoTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
+        infoTable.setWidth(UnitValue.createPercentValue(100));
+        
+        Cell nroCell = new Cell();
+        nroCell.add(new Paragraph("Serie - Número:")
+            .setBold()
+            .setFontSize(11));
+        nroCell.add(new Paragraph(datos.serie + "-" + String.format("%08d", datos.numero))
+            .setFontSize(14)
+            .setBold()
+            .setFontColor(colorSecundario));
+        nroCell.setBackgroundColor(colorGrisClaro);
+        nroCell.setTextAlignment(TextAlignment.CENTER);
+        nroCell.setPadding(10);
+        
+        Cell fechaCell = new Cell();
+        fechaCell.add(new Paragraph("Fecha de Emisión:")
+            .setBold()
+            .setFontSize(11));
+        fechaCell.add(new Paragraph(new SimpleDateFormat("dd/MM/yyyy").format(datos.fechaEmision))
+            .setFontSize(14)
+            .setBold());
+        fechaCell.setBackgroundColor(colorGrisClaro);
+        fechaCell.setTextAlignment(TextAlignment.CENTER);
+        fechaCell.setPadding(10);
+        
+        infoTable.addCell(nroCell);
+        infoTable.addCell(fechaCell);
+        
+        document.add(infoTable);
+        document.add(new Paragraph("\n"));
+    }
+
+    /**
+     * Datos del cliente (adaptado para facturas)
+     */
+    private void agregarDatosClienteFactura(Document document, Cotizacion cotizacion, DatosFacturaPDF datos) {
+        Paragraph tituloCliente = new Paragraph("DATOS DEL CLIENTE")
+            .setFontSize(12)
+            .setBold()
+            .setFontColor(colorPrimario);
+        document.add(tituloCliente);
+        
+        Table clienteTable = new Table(UnitValue.createPercentArray(new float[]{1, 3}));
+        clienteTable.setWidth(UnitValue.createPercentValue(100));
+        
+        agregarFilaCliente(clienteTable, "RUC:", datos.rucCliente);
+        agregarFilaCliente(clienteTable, "Razón Social:", datos.razonSocialCliente);
+        
+        if (cotizacion.getCliente().getNombreContacto() != null) {
+            agregarFilaCliente(clienteTable, "Contacto:", cotizacion.getCliente().getNombreContacto());
+        }
+        if (cotizacion.getCliente().getTelefono() != null) {
+            agregarFilaCliente(clienteTable, "Teléfono:", cotizacion.getCliente().getTelefono());
+        }
+        
+        document.add(clienteTable);
+        document.add(new Paragraph("\n"));
+    }
+
+    /**
+     * Tabla de productos (reutiliza lógica de cotización)
+     */
+    private void agregarTablaProductosFactura(Document document, Cotizacion cotizacion) {
+        Paragraph tituloProductos = new Paragraph("DETALLE DE LA FACTURA")
+            .setFontSize(12)
+            .setBold()
+            .setFontColor(colorPrimario);
+        document.add(tituloProductos);
+        
+        Table productosTable = new Table(UnitValue.createPercentArray(new float[]{1, 4, 1, 1.5f, 1.5f}));
+        productosTable.setWidth(UnitValue.createPercentValue(100));
+        
+        // Encabezados
+        String[] headers = {"Código", "Descripción", "Cant.", "V. Unit. (S/)", "Subtotal (S/)"};
+        for (String header : headers) {
+            Cell headerCell = new Cell();
+            headerCell.add(new Paragraph(header).setBold().setFontColor(ColorConstants.WHITE));
+            headerCell.setBackgroundColor(colorPrimario);
+            headerCell.setTextAlignment(TextAlignment.CENTER);
+            headerCell.setPadding(10);
+            productosTable.addHeaderCell(headerCell);
+        }
+        
+        // Filas de productos
+        for (ProductoCotizacion producto : cotizacion.getProductos()) {
+            productosTable.addCell(crearCeldaProducto(
+                producto.getCodigo() != null ? producto.getCodigo() : "-", 
+                TextAlignment.CENTER));
+            productosTable.addCell(crearCeldaProducto(producto.getDescripcion(), TextAlignment.LEFT));
+            productosTable.addCell(crearCeldaProducto(String.valueOf(producto.getCantidad()), TextAlignment.CENTER));
+            productosTable.addCell(crearCeldaProducto(String.format("%.2f", producto.getPrecioBase()), TextAlignment.RIGHT));
+            productosTable.addCell(crearCeldaProducto(String.format("%.2f", producto.getSubtotal()), TextAlignment.RIGHT));
+        }
+        
+        document.add(productosTable);
+        document.add(new Paragraph("\n"));
+    }
+
+    /**
+     * Resumen de montos con detracción
+     */
+    private void agregarResumenMontosFactura(Document document, Cotizacion cotizacion, DatosFacturaPDF datos) {
+        Table resumenTable = new Table(UnitValue.createPercentArray(new float[]{3, 1}));
+        resumenTable.setWidth(UnitValue.createPercentValue(50));
+        resumenTable.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.RIGHT);
+        
+        // Subtotal
+        agregarFilaMonto(resumenTable, "Subtotal:", String.format("S/ %.2f", cotizacion.getSubtotal()), false);
+        
+        // IGV
+        agregarFilaMonto(resumenTable, "IGV (18%):", String.format("S/ %.2f", cotizacion.getIGV()), false);
+        
+        // Total
+        agregarFilaMonto(resumenTable, "TOTAL:", String.format("S/ %.2f", cotizacion.getTotal()), true);
+        
+        // Detracción (si aplica)
+        if (datos.montoDetraccion > 0) {
+            agregarFilaMonto(resumenTable, "Detracción (" + String.format("%.0f", datos.porcentajeDetraccion) + "%):", 
+                String.format("S/ %.2f", datos.montoDetraccion), false);
+            
+            double montoPagar = cotizacion.getTotal() - datos.montoDetraccion;
+            agregarFilaMonto(resumenTable, "MONTO A PAGAR:", String.format("S/ %.2f", montoPagar), true);
+        }
+        
+        document.add(resumenTable);
+        document.add(new Paragraph("\n"));
+    }
+
+    /**
+     * Información de detracción
+     */
+    private void agregarInfoDetraccion(Document document, DatosFacturaPDF datos) {
+        Paragraph titulo = new Paragraph("INFORMACIÓN DE DETRACCIÓN")
+            .setFontSize(11)
+            .setBold()
+            .setFontColor(colorSecundario);
+        document.add(titulo);
+        
+        Table detTable = new Table(UnitValue.createPercentArray(new float[]{1, 2}));
+        detTable.setWidth(UnitValue.createPercentValue(70));
+        
+        agregarFilaCliente(detTable, "Tipo:", "037 - Demás servicios gravados con el IGV");
+        agregarFilaCliente(detTable, "Porcentaje:", String.format("%.0f%%", datos.porcentajeDetraccion));
+        agregarFilaCliente(detTable, "Monto:", String.format("S/ %.2f", datos.montoDetraccion));
+        
+        if (datos.cuentaBancoNacion != null && !datos.cuentaBancoNacion.isEmpty()) {
+            agregarFilaCliente(detTable, "Cuenta BN:", datos.cuentaBancoNacion);
+        }
+        
+        document.add(detTable);
+        document.add(new Paragraph("\n"));
+    }
+
+    /**
+     * Información de crédito
+     */
+    private void agregarInfoCredito(Document document, DatosFacturaPDF datos) {
+        Paragraph titulo = new Paragraph("CONDICIÓN DE PAGO: CRÉDITO")
+            .setFontSize(11)
+            .setBold()
+            .setFontColor(colorSecundario);
+        document.add(titulo);
+        
+        Table creditoTable = new Table(UnitValue.createPercentArray(new float[]{1, 2}));
+        creditoTable.setWidth(UnitValue.createPercentValue(60));
+        
+        agregarFilaCliente(creditoTable, "Monto Pendiente:", String.format("S/ %.2f", datos.montoNetoPendiente));
+        agregarFilaCliente(creditoTable, "Monto Cuota:", String.format("S/ %.2f", datos.montoCuota));
+        agregarFilaCliente(creditoTable, "Vencimiento:", 
+            new SimpleDateFormat("dd/MM/yyyy").format(datos.fechaVencimiento));
+        
+        document.add(creditoTable);
+        document.add(new Paragraph("\n"));
+    }
+
+    /**
+     * Pie de página específico para facturas
+     */
+    private void agregarPieFactura(Document document) {
+        document.add(new Paragraph("\n"));
+        
+        // Observaciones
+        Paragraph obs = new Paragraph("Documento emitido de acuerdo a la normativa SUNAT vigente")
+            .setFontSize(8)
+            .setItalic()
+            .setTextAlignment(TextAlignment.CENTER);
+        document.add(obs);
+        
+        // Info de contacto
+        Paragraph footer = new Paragraph(
+            configuracion.getProperty("empresa.razon_social", "InfleSusVentas SRL") + "\n" +
+            configuracion.getProperty("empresa.direccion", "") + " | " +
+            "Tel: " + configuracion.getProperty("empresa.telefono", "") + " | " +
+            configuracion.getProperty("empresa.email", "")
+        )
+        .setFontSize(8)
+        .setTextAlignment(TextAlignment.CENTER)
+        .setFontColor(ColorConstants.GRAY);
+        
+        document.add(footer);
+    }
+
+    /**
+     * Clase interna para datos de factura en PDF
+     */
+    public static class DatosFacturaPDF {
+        // Identificación
+        public String serie = "F001";
+        public int numero = 1;
+        public Date fechaEmision = new Date();
+        public String moneda = "PEN";
+        
+        // Emisor
+        public String rucEmisor;
+        public String razonSocialEmisor;
+        
+        // Cliente
+        public String rucCliente;
+        public String razonSocialCliente;
+        
+        // Detracción
+        public double porcentajeDetraccion = 0;
+        public double montoDetraccion = 0;
+        public String cuentaBancoNacion = "";
+        
+        // Crédito
+        public boolean esCredito = false;
+        public double montoNetoPendiente = 0;
+        public double montoCuota = 0;
+        public Date fechaVencimiento = new Date();
     }
 }
