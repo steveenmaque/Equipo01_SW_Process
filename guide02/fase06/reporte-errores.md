@@ -31,8 +31,8 @@ Este documento detalla los defectos identificados durante la ejecución de las p
 - **Fecha del defecto:** 2025-11-23
 - **Detectado por:** Junior Zelada Llaxa (Tester)
 - **Estado del defecto:**  Abierto
-- **Corregido por:** ---
-- **Fecha de cierre:** ---
+- **Corregido por:** Junior Zelada Llaxa
+- **Fecha de cierre:** 2025-11-23
 - **Prioridad:**  Alta 
 
 ---
@@ -54,8 +54,8 @@ Este documento detalla los defectos identificados durante la ejecución de las p
 - **Fecha del defecto:** 2025-11-23
 - **Detectado por:** Junior Zelada Llaxa (Tester)
 - **Estado del defecto:**  Abierto
-- **Corregido por:** ---
-- **Fecha de cierre:** ---
+- **Corregido por:** Steeven Maque
+- **Fecha de cierre:** 2025-11-23
 - **Prioridad:**  Crítico (Impide flujo de venta posterior)
 
 ---
@@ -77,6 +77,6 @@ Este documento detalla los defectos identificados durante la ejecución de las p
 - **Fecha del defecto:** 2025-11-23
 - **Detectado por:** Junior Zelada Llaxa (Tester)
 - **Estado del defecto:**  Abierto
-- **Corregido por:** ---
-- **Fecha de cierre:** ---
+- **Corregido por:** Steveen Maque
+- **Fecha de cierre:** 2025-11-23
 - **Prioridad:**  Crítico
