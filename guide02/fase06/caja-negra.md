@@ -72,17 +72,6 @@
 
 ---
 
-## Casos de Uso Pendientes
-
-| ID Caso de Uso | Descripción | Razón |
-|----------------|-------------|-------|
-| CU-03 | Registrar Venta | No implementado en pruebas unitarias |
-| CU-07 | Registrar Datos de Traslado | Cubierto parcialmente en CU-05 |
-| CU-08 | Validar Comprobante con SUNAT | Requiere integración con API externa |
-| CU-11 | Enviar Documento por Email | Requiere servicio de email configurado |
-
----
-
 ## Estructura de Evidencias
 
 Las evidencias están organizadas en la carpeta `evidencias/` con la siguiente estructura:
