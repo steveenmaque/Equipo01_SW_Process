@@ -282,11 +282,11 @@ class CajaNegraTest {
         // Arrange - RN36: Debe incluir motivo de emisión
         NotaCredito nc = new NotaCredito();
         nc.setNumeroFacturaRef("F001-00000123");
-        nc.setMotivoSustento(""); // Motivo vacío
 
-        // Assert
-        assertTrue(nc.getMotivoSustento().isEmpty());
-        // En producción, esto debería lanzar una excepción de validación
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            nc.setMotivoSustento(""); // Motivo vacío debe lanzar excepción
+        });
     }
 
     // ========== PRUEBAS DE VALIDACIÓN GENERAL ==========
@@ -297,13 +297,11 @@ class CajaNegraTest {
     void testCotizacionSinClienteInvalida() {
         // Arrange
         Cotizacion cotizacion = new Cotizacion();
-        cotizacion.setCliente(null);
-        cotizacion.setProductos(new ArrayList<>());
-        cotizacion.getProductos().add(new ProductoCotizacion("A", "B", 1, "U", 10.0));
 
-        // Assert
-        assertNull(cotizacion.getCliente());
-        // En producción, esto debería ser rechazado por validación
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            cotizacion.setCliente(null);
+        });
     }
 
     @Test
@@ -312,11 +310,11 @@ class CajaNegraTest {
     void testComprobanteSinItemsInvalido() {
         // Arrange
         ComprobanteElectronico comprobante = new ComprobanteElectronico();
-        comprobante.setItems(new ArrayList<>());
 
-        // Assert
-        assertTrue(comprobante.getItems().isEmpty());
-        // En producción, esto debería ser rechazado
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            comprobante.setItems(new ArrayList<>());
+        });
     }
 
     @Test

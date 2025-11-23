@@ -13,8 +13,8 @@ public class Cotizacion {
     private boolean mostrarConIGV;
     private String moneda = "PEN";
     private double tipoCambio = 3.85;
-    private boolean facturada = false; 
-    
+    private boolean facturada = false;
+
     // --- ENUM CORREGIDO (Con descripciones reales) ---
     public enum CondicionPago {
         CONTADO("Contado contra entrega"),
@@ -38,33 +38,98 @@ public class Cotizacion {
     }
 
     // --- GETTERS Y SETTERS ---
-    public int getNumeroCotizacion() { return numeroCotizacion; }
-    public void setNumeroCotizacion(int numeroCotizacion) { this.numeroCotizacion = numeroCotizacion; }
-    public LocalDate getFecha() { return fecha; }
-    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
-    public Cliente getCliente() { return cliente; }
-    public void setCliente(Cliente cliente) { this.cliente = cliente; }
-    public List<ProductoCotizacion> getProductos() { return productos; }
-    public void setProductos(List<ProductoCotizacion> productos) { this.productos = productos; }
-    public CondicionPago getCondicionPago() { return condicionPago; }
-    public void setCondicionPago(CondicionPago condicionPago) { this.condicionPago = condicionPago; }
-    public int getDiasVigencia() { return diasVigencia; }
-    public void setDiasVigencia(int diasVigencia) { this.diasVigencia = diasVigencia; }
-    public boolean isMostrarConIGV() { return mostrarConIGV; }
-    public void setMostrarConIGV(boolean mostrarConIGV) { this.mostrarConIGV = mostrarConIGV; }
-    public String getMoneda() { return moneda; }
-    public void setMoneda(String moneda) { this.moneda = moneda; }
-    public double getTipoCambio() { return tipoCambio; }
-    public void setTipoCambio(double tipoCambio) { this.tipoCambio = tipoCambio; }
-    public boolean isFacturada() { return facturada; }
-    public void setFacturada(boolean facturada) { this.facturada = facturada; }
+    public int getNumeroCotizacion() {
+        return numeroCotizacion;
+    }
+
+    public void setNumeroCotizacion(int numeroCotizacion) {
+        this.numeroCotizacion = numeroCotizacion;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        if (cliente == null) {
+            throw new IllegalArgumentException("El cliente es obligatorio para la cotización");
+        }
+        this.cliente = cliente;
+    }
+
+    public List<ProductoCotizacion> getProductos() {
+        return productos;
+    }
+
+    public void setProductos(List<ProductoCotizacion> productos) {
+        this.productos = productos;
+    }
+
+    public CondicionPago getCondicionPago() {
+        return condicionPago;
+    }
+
+    public void setCondicionPago(CondicionPago condicionPago) {
+        this.condicionPago = condicionPago;
+    }
+
+    public int getDiasVigencia() {
+        return diasVigencia;
+    }
+
+    public void setDiasVigencia(int diasVigencia) {
+        this.diasVigencia = diasVigencia;
+    }
+
+    public boolean isMostrarConIGV() {
+        return mostrarConIGV;
+    }
+
+    public void setMostrarConIGV(boolean mostrarConIGV) {
+        this.mostrarConIGV = mostrarConIGV;
+    }
+
+    public String getMoneda() {
+        return moneda;
+    }
+
+    public void setMoneda(String moneda) {
+        this.moneda = moneda;
+    }
+
+    public double getTipoCambio() {
+        return tipoCambio;
+    }
+
+    public void setTipoCambio(double tipoCambio) {
+        this.tipoCambio = tipoCambio;
+    }
+
+    public boolean isFacturada() {
+        return facturada;
+    }
+
+    public void setFacturada(boolean facturada) {
+        this.facturada = facturada;
+    }
+
     // --- MÉTODOS CALCULADOS ---
     public double getSubtotal() {
-        if (productos == null) return 0.0;
+        if (productos == null)
+            return 0.0;
         return productos.stream().mapToDouble(ProductoCotizacion::getSubtotal).sum();
     }
 
-    // Este es el que te daba problemas por mayúsculas/minúsculas. Usamos getIGV() (estándar Java)
+    // Este es el que te daba problemas por mayúsculas/minúsculas. Usamos getIGV()
+    // (estándar Java)
     public double getIGV() {
         return getSubtotal() * 0.18;
     }
