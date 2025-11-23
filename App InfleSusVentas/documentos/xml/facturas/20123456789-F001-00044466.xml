@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:ID>F001-00044466</cbc:ID>
+  <cbc:IssueDate>2025-11-23</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>PEN</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID>20123456789</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>InfleSusVentas SRL</cbc:Name>
+      </cac:PartyName>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID>20556743054</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>AyD PubliIinflables</cbc:Name>
+      </cac:PartyName>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:PaymentMeans>
+    <cbc:PaymentMeansCode>Credito</cbc:PaymentMeansCode>
+  </cac:PaymentMeans>
+  <cac:PaymentTerms>
+    <cbc:PaymentDueDate>2025-12-23</cbc:PaymentDueDate>
+    <cbc:Amount>3531.00</cbc:Amount>
+  </cac:PaymentTerms>
+  <cac:PaymentTerms>
+    <cbc:ID>Detraccion</cbc:ID>
+    <cbc:PaymentPercent>12.00</cbc:PaymentPercent>
+    <cbc:Amount>481.00</cbc:Amount>
+  </cac:PaymentTerms>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="UND">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount>3400.00</cbc:LineExtensionAmount>
+    <cac:Price>
+      <cbc:PriceAmount>3400.00</cbc:PriceAmount>
+    </cac:Price>
+    <cac:Item>
+      <cbc:Description>Arco Inflable Publicitario</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>002</cbc:ID>
+      </cac:SellersItemIdentification>
+    </cac:Item>
+  </cac:InvoiceLine>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount>3400.00</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount>4012.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount>3531.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:TaxTotal>
+    <cbc:TaxAmount>612.00</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount>3400.00</cbc:TaxableAmount>
+      <cbc:TaxAmount>612.00</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cac:TaxScheme>
+          <cbc:ID>1000</cbc:ID>
+          <cbc:Name>IGV</cbc:Name>
+          <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+</Invoice>
