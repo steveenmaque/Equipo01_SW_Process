@@ -93,6 +93,9 @@ public class NotaCredito {
     }
 
     public void setMotivoSustento(String motivoSustento) {
+        if (motivoSustento == null || motivoSustento.trim().isEmpty()) {
+            throw new IllegalArgumentException("El motivo de sustento es obligatorio");
+        }
         this.motivoSustento = motivoSustento;
     }
 

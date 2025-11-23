@@ -13,12 +13,16 @@ public class Cotizacion {
     private boolean mostrarConIGV;
     private String moneda = "PEN";
     private double tipoCambio = 3.85;
+<<<<<<< HEAD
     private boolean facturada = false; 
     
     private String idFacturaGenerada; // Ejemplo: "F001-00000045"
     private boolean anulada = false; // Nuevo estado
 
 
+=======
+    private boolean facturada = false;
+>>>>>>> 43cd55b3c5abc4e29c81404b3720f978216ae02d
 
     // --- ENUM CORREGIDO (Con descripciones reales) ---
     public enum CondicionPago {
@@ -43,6 +47,7 @@ public class Cotizacion {
     }
 
     // --- GETTERS Y SETTERS ---
+<<<<<<< HEAD
     public int getNumeroCotizacion() { return numeroCotizacion; }
     public void setNumeroCotizacion(int numeroCotizacion) { this.numeroCotizacion = numeroCotizacion; }
     public LocalDate getFecha() { return fecha; }
@@ -70,13 +75,100 @@ public class Cotizacion {
     public boolean isAnulada() { return anulada; }
     public void setAnulada(boolean anulada) { this.anulada = anulada; }
     
+=======
+    public int getNumeroCotizacion() {
+        return numeroCotizacion;
+    }
+
+    public void setNumeroCotizacion(int numeroCotizacion) {
+        this.numeroCotizacion = numeroCotizacion;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        if (cliente == null) {
+            throw new IllegalArgumentException("El cliente es obligatorio para la cotización");
+        }
+        this.cliente = cliente;
+    }
+
+    public List<ProductoCotizacion> getProductos() {
+        return productos;
+    }
+
+    public void setProductos(List<ProductoCotizacion> productos) {
+        this.productos = productos;
+    }
+
+    public CondicionPago getCondicionPago() {
+        return condicionPago;
+    }
+
+    public void setCondicionPago(CondicionPago condicionPago) {
+        this.condicionPago = condicionPago;
+    }
+
+    public int getDiasVigencia() {
+        return diasVigencia;
+    }
+
+    public void setDiasVigencia(int diasVigencia) {
+        this.diasVigencia = diasVigencia;
+    }
+
+    public boolean isMostrarConIGV() {
+        return mostrarConIGV;
+    }
+
+    public void setMostrarConIGV(boolean mostrarConIGV) {
+        this.mostrarConIGV = mostrarConIGV;
+    }
+
+    public String getMoneda() {
+        return moneda;
+    }
+
+    public void setMoneda(String moneda) {
+        this.moneda = moneda;
+    }
+
+    public double getTipoCambio() {
+        return tipoCambio;
+    }
+
+    public void setTipoCambio(double tipoCambio) {
+        this.tipoCambio = tipoCambio;
+    }
+
+    public boolean isFacturada() {
+        return facturada;
+    }
+
+    public void setFacturada(boolean facturada) {
+        this.facturada = facturada;
+    }
+
+>>>>>>> 43cd55b3c5abc4e29c81404b3720f978216ae02d
     // --- MÉTODOS CALCULADOS ---
     public double getSubtotal() {
-        if (productos == null) return 0.0;
+        if (productos == null)
+            return 0.0;
         return productos.stream().mapToDouble(ProductoCotizacion::getSubtotal).sum();
     }
 
-    // Este es el que te daba problemas por mayúsculas/minúsculas. Usamos getIGV() (estándar Java)
+    // Este es el que te daba problemas por mayúsculas/minúsculas. Usamos getIGV()
+    // (estándar Java)
     public double getIGV() {
         return getSubtotal() * 0.18;
     }

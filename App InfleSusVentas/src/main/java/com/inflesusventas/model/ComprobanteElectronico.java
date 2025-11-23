@@ -82,6 +82,9 @@ public class ComprobanteElectronico {
     }
 
     public void setItems(List<ProductoCotizacion> items) {
+        if (items == null || items.isEmpty()) {
+            throw new IllegalArgumentException("La lista de ítems no puede estar vacía");
+        }
         this.items = items;
     }
 

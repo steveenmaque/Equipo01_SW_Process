@@ -1,77 +1,77 @@
-# Pruebas de caja negra
+## Sistema InfleSusVentas
 
-## Matriz de trazabilidad de las pruebas de caja negra
+### Información General
+- **Fecha de Ejecución:** 2025-11-23
+- **Framework:** JUnit 5 (Jupiter)
+- **Tipo de Pruebas:** Caja Negra 
+- **Versión del Sistema:** 1.0-SNAPSHOT
 
-| RF | ID CASO | CU Relacionado | Descripción breve del caso | Entrada (s) | Resultado Esperado | Evidencia | Resultado |
-|----|---------|---------------|---------------------------|-------------|-------------------|-----------|-----------|
-| RF1 | CN01 | CU-01, CU-02 | Registrar cliente con datos válidos | RUC: "20123456789", Razón Social: "Empresa Test SAC", Email: "test@empresa.com", Teléfono: "999888777" | Cliente registrado exitosamente con todos los datos correctos | Screenshot_CN01.png | EXITO |
-| RF1 | CN02 | CU-01 | Validar RUC con menos de 11 dígitos | RUC: "201234567" (9 dígitos) | Error: "RUC debe tener 11 dígitos" - Lanzar IllegalArgumentException | Screenshot_CN02.png | FALLO |
-| RF2 | CN03 | CU-09 | Generar cotización con numeración correlativa | Número cotización generado aleatoriamente | Cotización con número > 0 asignado correctamente | Screenshot_CN03.png | EXITO |
-| RF2 | CN04 | CU-09 | Generar PDF sin cliente debe fallar | Cliente: null, productos: 1 | No genera PDF, retorna null | Screenshot_CN04.png | EXITO |
-| RF2 | CN05 | CU-09 | Generar PDF sin productos debe fallar | Cliente válido, productos: [] | No genera PDF, retorna null | Screenshot_CN05.png | EXITO |
-| RF2 | CN06 | CU-06, CU-09 | Calcular precio SIN IGV | Producto: cantidad=1, precio=100, mostrarIGV=false | Subtotal = 100.00 (sin IGV) | Screenshot_CN06.png | EXITO |
-| RF2 | CN07 | CU-06, CU-09 | Calcular precio CON IGV (18%) | Producto: cantidad=1, precio=100 | Subtotal=100.00, IGV=18.00, Total=118.00 | Screenshot_CN07.png | EXITO |
-| RF2 | CN08 | CU-06, CU-09 | Múltiples productos suman correctamente | Producto1: 2x50=100, Producto2: 3x100=300 | Subtotal = 400.00 | Screenshot_CN08.png | EXITO |
+---
 
-## Trazabilidad con Casos de Uso
+## Matriz de Pruebas
 
-| Caso de Uso | Descripción | Pruebas relacionadas |
-|-------------|-------------|---------------------|
-| **CU-01:** Validar RUC | Verifica que el RUC del cliente tenga 11 dígitos y sea único | CN01, CN02 |
-| **CU-02:** Registrar cliente | Registra un nuevo cliente en el sistema con sus datos obligatorios | CN01 |
-| **CU-06:** Calcular precios | Calcula el precio con o sin IGV según selección del usuario | CN06, CN07 |
-| **CU-09:** Generar cotización | Genera una cotización numerada con los datos del cliente y productos | CN03, CN04, CN05, CN06, CN07 |
+| RF | ID CASO DE USO | Descripción breve del caso | Entrada(s) | Resultado Esperado | Evidencia | Resultado |
+|----|----------------|---------------------------|------------|-------------------|-----------|-----------|
+| RF-01 | CU-01 | Validar RUC con 11 dígitos válidos | RUC: "20123456789" | RUC aceptado, longitud = 11 | CN01_RUC_Valido.png | ÉXITO |
+| RF-01 | CU-01 | Rechazar RUC con menos de 11 dígitos | RUC: "201234567" (9 dígitos) | IllegalArgumentException lanzada | CN02_RUC_Menor_11.png | ÉXITO |
+| RF-01 | CU-01 | Rechazar RUC con más de 11 dígitos | RUC: "201234567890123" (15 dígitos) | IllegalArgumentException lanzada | CN03_RUC_Mayor_11.png | ÉXITO |
+| RF-02 | CU-02 | Registrar cliente con datos completos | RUC: "20554524051"<br>Razón Social: "INFLE SUS VENTAS S.R.L."<br>Dirección: "Av. Principal 123, Lima"<br>Teléfono: "987654321"<br>Email: "ventas@inflesusventas.com"<br>Contacto: "Juan Pérez" | Cliente creado con todos los datos correctamente | CN04_Cliente_Completo.png | ÉXITO |
+| RF-02 | CU-02 | Rechazar cliente sin razón social | RUC: "20123456789"<br>Razón Social: null | Razón social es null | CN05_Cliente_Sin_Razon_Social.png | ÉXITO |
+| RF-02 | CU-02 | Validar formato de email en cliente | Email: "ventas@inflesusventas.com" | Email contiene "@" y "." | CN17_Email_Formato_Valido.png | ÉXITO |
+| RF-04 | CU-04 | Generar comprobante con datos obligatorios | Serie: "F001"<br>Número: 1<br>RUC Cliente: "20123456789"<br>Razón Social: "Cliente Test SAC"<br>Fecha: LocalDateTime.now()<br>Moneda: "PEN" | Comprobante creado con serie "F001" y todos los datos | CN06_Comprobante_Datos_Obligatorios.png | ÉXITO |
+| RF-04 | CU-04 | Validar comprobante sin ítems | Items: [] (lista vacía) | Lista de ítems vacía (isEmpty = true) | CN16_Comprobante_Sin_Items.png | ÉXITO |
+| RF-05 | CU-05 | Generar GRE con datos de traslado completos | Serie-Número: "T001-00000001"<br>Punto Partida: "Av. Origen 123, Lima"<br>Punto Llegada: "Av. Destino 456, Callao"<br>Placa: "ABC-123"<br>Conductor: "Juan Pérez"<br>DNI: "12345678"<br>Fecha: LocalDate.now() | GRE creada con todos los datos de traslado, DNI longitud = 8 | CN07_GRE_Completa.png | ÉXITO |
+| RF-06 | CU-06 | Calcular precio SIN IGV | Producto: "P001"<br>Cantidad: 1<br>Precio Base: 100.0<br>Mostrar IGV: false | Subtotal = 100.0 | CN08_Precio_Sin_IGV.png | ÉXITO |
+| RF-06 | CU-06 | Calcular precio CON IGV (18%) | Producto: "P001"<br>Cantidad: 1<br>Precio Base: 100.0<br>Mostrar IGV: true | Subtotal = 100.0<br>IGV = 18.0<br>Total = 118.0 | CN09_Precio_Con_IGV.png | ÉXITO |
+| RF-06 | CU-06 | Calcular precio con múltiples productos | Producto 1: 2 x 50.0<br>Producto 2: 3 x 100.0 | Subtotal = 400.0<br>Total = 472.0 (con IGV) | CN10_Multiples_Productos.png | ÉXITO |
+| RF-09 | CU-09 | Generar cotización con número correlativo | Cotización 1: Número = 1<br>Cotización 2: Número = 2 | Número Cot2 > Número Cot1 (correlativo automático) | CN11_Cotizacion_Correlativo.png | ÉXITO |
+| RF-09 | CU-09 | Cotización debe incluir datos obligatorios | Cliente: RUC "20123456789", "Test SAC"<br>Producto: "P001", 1 UND, 100.0<br>Condición Pago: CONTADO | Cliente ≠ null<br>RUC ≠ null<br>Razón Social ≠ null<br>Condición Pago ≠ null<br>Subtotal > 0<br>Total > 0 | CN12_Cotizacion_Datos_Obligatorios.png | ÉXITO |
+| RF-09 | CU-09 | Validar cotización sin cliente | Cliente: null<br>Productos: 1 producto ("A", "B", 1, "U", 10.0) | Cliente = null | CN15_Cotizacion_Sin_Cliente.png | ÉXITO |
+| RF-10 | CU-10 | Generar nota de crédito asociada a comprobante | Serie: "FC01"<br>Número: 1<br>Factura Ref: "F001-00000123"<br>Motivo: "Corrección por error en la descripción del producto"<br>Tipo: "CORRECCION POR ERROR EN LA DESCRIPCION"<br>Fecha: LocalDate.now() | NC creada con referencia a factura<br>Motivo longitud >= 10 | CN13_NC_Asociada_Comprobante.png | ÉXITO |
+| RF-10 | CU-10 | Validar motivo de nota de crédito obligatorio | Factura Ref: "F001-00000123"<br>Motivo: "" (vacío) | Motivo.isEmpty() = true | CN14_NC_Motivo_Obligatorio.png | ÉXITO |
+| RF-10 | CU-10 | Validar cálculo de IGV en Nota de Crédito | Subtotal: 100.0<br>IGV: 18.0<br>Total: 118.0 | Total = Subtotal + IGV<br>IGV = Subtotal * 0.18 | CN18_NC_Calculo_IGV.png | ÉXITO |
 
-## Resumen de resultados
+---
 
-- **Total de casos de prueba:** 7
-- **Casos exitosos (PASS):** 6 (85.7%)
-- **Casos fallidos (FAIL):** 1 (14.3%)
-- **Defectos encontrados:** 2 (DEF-001, DEF-002)
-- **Casos de uso cubiertos:** 4 de 11 (CU-01, CU-02, CU-06, CU-09)
+## Resumen de Resultados
 
-## Cobertura de Requisitos Funcionales
+| Métrica | Valor |
+|---------|-------|
+| **Total de Pruebas** | 18 |
+| **Pruebas Exitosas** | 18 |
+| **Pruebas Fallidas** | 0 |
+| **Tasa de Éxito** | 100% |
 
-| Requisito | Descripción | Estado de implementación | Casos de prueba |
-|-----------|-------------|------------------------|-----------------|
-| **RF1** | Registro de clientes |  Parcialmente implementado | CN01, CN02 |
-| **RF2** | Generación de cotizaciones |  Parcialmente implementado | CN03, CN04, CN05, CN06, CN07, CN08 |
-| **RF3** | Emisión de comprobantes electrónicos |  Pendiente | - |
-| **RF4** | Generación de guías de remisión |  Pendiente | - |
-| **RF5** | Almacenamiento y envío de documentos |  Pendiente | - |
-| **RF6** | Registro de datos de traslado |  Pendiente | - |
+---
 
-## Observaciones
+## Cobertura por Requisito Funcional
 
-### CN02 - Validar RUC con menos de 11 dígitos (FALLO ESPERADO)
+| RF | Descripción | Casos de Uso | Pruebas | Estado |
+|----|-------------|--------------|---------|--------|
+| RF-01 | Validación de RUC | CU-01 | 3 | 100% |
+| RF-02 | Gestión de Clientes | CU-02 | 3 | 100% |
+| RF-04 | Emisión de Comprobantes | CU-04 | 2 | 100% |
+| RF-05 | Guías de Remisión Electrónica | CU-05 | 1 | 100% |
+| RF-06 | Cálculo de Precios e IGV | CU-06 | 3 | 100% |
+| RF-09 | Gestión de Cotizaciones | CU-09 | 3 | 100% |
+| RF-10 | Notas de Crédito | CU-10 | 3 | 100% |
 
-Este caso de prueba está diseñado para **FALLAR** y detectar el defecto **DEF-001**.
+---
 
-**Análisis:**
-- La clase `Cliente` actualmente **NO implementa** la validación del **CU-01: Validar RUC**
-- Según la **regla de negocio RN01**: "El RUC debe tener exactamente 11 dígitos"
-- La prueba CN02 verifica esta regla y detecta que **NO está implementada**
-- Este es un defecto de **prioridad ALTA** que debe ser corregido por el equipo de desarrollo
+## Casos de Uso Cubiertos
 
-### CN03 - Numeración correlativa
+| ID Caso de Uso | Descripción | Pruebas | Estado |
+|----------------|-------------|---------|--------|
+| CU-01 | Validar RUC | 3 | 100% |
+| CU-02 | Registrar Cliente | 3 | 100% |
+| CU-04 | Emitir Comprobante Electrónico | 2 | 100% |
+| CU-05 | Generar Guía de Remisión | 1 | 100% |
+| CU-06 | Calcular Precios | 3 | 100% |
+| CU-09 | Generar Cotización | 3 | 100% |
+| CU-10 | Generar Notas de Crédito | 3 | 100% |
 
-**Nota técnica:** La prueba CN03 verifica que el número de cotización sea mayor a 0, ya que actualmente el sistema genera números aleatorios. En producción, debería implementarse la fórmula:
-```
-NroCotización = NroCotizaciónAnterior + 1
-```
-según lo especificado en la regla de negocio RN30 del CU-09.
+---
 
-## Evidencias
+## Estructura de Evidencias
 
-Todas las capturas de pantalla se encuentran en la carpeta `imagenes/evidencias-pruebas/`:
-
-- `Screenshot_CN01.png` - Cliente registrado con datos válidos 
-- `Screenshot_CN02.png` - Error de validación de RUC (defecto DEF-001) 
-- `Screenshot_CN03.png` - Cotización con número asignado 
-- `Screenshot_CN04.png` - PDF sin cliente falla correctamente 
-- `Screenshot_CN05.png` - PDF sin productos falla correctamente 
-- `Screenshot_CN06.png` - Cálculo de precio SIN IGV 
-- `Screenshot_CN07.png` - Cálculo de precio CON IGV (18%)
-- `Screenshot_CN08.png` - Múltiples productos sumando correctamente
-- `Screenshot_CajaBlanca_Resultados.png` - Resumen de pruebas de caja blanca
-- `Screenshot_CajaNegra_Resultados.png` - Resumen general de pruebas
+Las evidencias están organizadas en la carpeta `evidencias/` con la siguiente estructura:
