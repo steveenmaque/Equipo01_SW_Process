@@ -1,6 +1,8 @@
 package com.inflesusventas.view.comprobante;
 
 import com.inflesusventas.controller.CotizacionController;
+import com.inflesusventas.model.Cliente;
+import com.inflesusventas.model.ComprobanteElectronico;
 import com.inflesusventas.model.Cotizacion;
 import com.inflesusventas.model.ProductoCotizacion;
 
@@ -17,6 +19,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.inflesusventas.service.ClienteService;
+import com.inflesusventas.service.ComprobanteService;
 import com.inflesusventas.service.PdfGeneratorService;
 import com.inflesusventas.service.PdfGeneratorService.DatosFacturaPDF;
 import com.inflesusventas.service.XmlGeneratorService;
@@ -24,6 +28,8 @@ import com.inflesusventas.service.XmlGeneratorService.DatosFacturaElectronica;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 /**
@@ -31,13 +37,13 @@ import java.util.Date;
  * Reescrita para seguir estilo de CotizacionFormView (panel principal con secciones apiladas).
  */
 public class ComprobanteFormView extends JPanel {
-
+    
     private static final Color COLOR_PRIMARIO = new Color(15,65,116);
     private static final Color COLOR_FONDO = new Color(248,249,250);
     private static final Color COLOR_NARANJA = new Color(230,130,70);
 
     private final CotizacionController cotizacionController;
-
+    
     // Lista para guardar TODAS las cotizaciones creadas
     private java.util.List<Cotizacion> listaCotizaciones = new java.util.ArrayList<>();
 
@@ -101,14 +107,22 @@ public class ComprobanteFormView extends JPanel {
     private PdfGeneratorService pdfService;
     private XmlGeneratorService xmlService;
 
+     private ClienteService clienteService;
+    private ComprobanteService comprobanteService;
+
     // Conjunto para rastrear cotizaciones ya facturadas
     private java.util.Set<Integer> cotizacionesFacturadas = new java.util.HashSet<>();
 
     // Mapa para guardar los IDs de factura generados por cotización
     private java.util.Map<Integer, String> mapaIdFacturas = new java.util.HashMap<>();
 
-    public ComprobanteFormView(CotizacionController cotizacionController) {
+    public ComprobanteFormView(CotizacionController cotizacionController, 
+                               ClienteService clienteService, 
+                               ComprobanteService comprobanteService) {
         this.cotizacionController = cotizacionController;
+        this.clienteService = clienteService;         // <--- Guardamos referencia
+        this.comprobanteService = comprobanteService; // <--- Guardamos referencia
+        
         this.pdfService = new PdfGeneratorService();
         this.xmlService = new XmlGeneratorService();
         inicializarComponentes();
@@ -208,41 +222,32 @@ public class ComprobanteFormView extends JPanel {
 
         // Listener selección
         tablaProductos.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-        @Override 
-        public void valueChanged(ListSelectionEvent e) {
-            if (!e.getValueIsAdjusting()) {
-                int fila = tablaProductos.getSelectedRow();
-                boolean seleccionado = fila != -1;
-                
-                if (seleccionado && fila < listaCotizaciones.size()) {
-                    // Verificar si esta cotización ya fue facturada (usando ÍNDICE)
-                    if (cotizacionesFacturadas.contains(fila)) {
-                        // Ya fue facturada - BLOQUEAR
-                        mostrarSecciones(false);
-                        JOptionPane.showMessageDialog(ComprobanteFormView.this,
-                            "⚠️ Esta cotización ya tiene una factura emitida.\n\n" +
-                            "ID Factura: " + mapaIdFacturas.get(fila) + "\n\n" +
-                            "No se puede volver a facturar.",
-                            "Factura ya emitida",
-                            JOptionPane.WARNING_MESSAGE);
-                        tablaProductos.clearSelection();
-                    } else {
-                        // No ha sido facturada - PERMITIR
-                        // Cargar datos de la cotización seleccionada
-                        Cotizacion cotizacionSeleccionada = listaCotizaciones.get(fila);
-                        cargarDatosCotizacionSeleccionada(cotizacionSeleccionada);
+            @Override 
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int fila = tablaProductos.getSelectedRow();
+                    
+                    if (fila != -1 && fila < listaCotizaciones.size()) {
+                        Cotizacion cotSelected = listaCotizaciones.get(fila);
                         
-                        mostrarSecciones(true);
-                        poblarSeccion1DesdeCotizacion(cotizacionSeleccionada);
-                        poblarSeccion2SegunCondicion(cotizacionSeleccionada);
-                        actualizarSeccion3(cotizacionSeleccionada);
+                        // VERIFICAR SI ESTÁ FACTURADA USANDO EL MODELO
+                        if (cotSelected.isFacturada()) {
+                            mostrarSecciones(false);
+                            JOptionPane.showMessageDialog(ComprobanteFormView.this,
+                                "Esta cotización ya fue procesada anteriormente.",
+                                "Aviso", JOptionPane.INFORMATION_MESSAGE);
+                            tablaProductos.clearSelection();
+                        } else {
+                            cargarDatosCotizacionSeleccionada(cotSelected);
+                            mostrarSecciones(true);
+                            poblarSeccion1DesdeCotizacion(cotSelected);
+                            poblarSeccion2SegunCondicion(cotSelected);
+                            actualizarSeccion3(cotSelected);
+                        }
                     }
-                } else {
-                    mostrarSecciones(false);
                 }
             }
-        }
-    });
+        });
         return panel;
     }
 
@@ -472,30 +477,18 @@ public class ComprobanteFormView extends JPanel {
     }
 
     public void cargarProductosDesdeCotizacion() {
-        // Obtener cotización actual del controlador
-        Cotizacion cotizacionActual = cotizacionController.getCotizacionActual();
+        // 1. Obtener la lista COMPLETA del controlador (que viene del JSON)
+        List<Cotizacion> todas = cotizacionController.getTodasLasCotizaciones();
         
-        if (cotizacionActual == null || cotizacionActual.getProductos() == null || 
-            cotizacionActual.getProductos().isEmpty()) {
-            return;
+        if (todas == null) {
+            todas = new java.util.ArrayList<>();
         }
-        
-        // Verificar si esta cotización ya está en la lista (comparar por número o ID)
-        boolean yaExiste = false;
-        for (Cotizacion cot : listaCotizaciones) {
-            if (cot.getNumeroCotizacion() == cotizacionActual.getNumeroCotizacion()) {
-                yaExiste = true;
-                break;
-            }
-        }
-        
-        // Si es nueva, agregarla a la lista
-        if (!yaExiste) {
-            listaCotizaciones.add(cotizacionActual);
-            System.out.println("✓ Nueva cotización agregada. Total: " + listaCotizaciones.size());
-        }
-        
-        // Recargar toda la tabla con TODAS las cotizaciones
+
+        // 2. Actualizar la lista local de la vista
+        this.listaCotizaciones = todas;
+        System.out.println("Vista Comprobantes: cargando " + listaCotizaciones.size() + " cotizaciones.");
+
+        // 3. Refrescar la tabla visual
         refrescarTablaCompleta();
     }
 
@@ -520,55 +513,43 @@ public class ComprobanteFormView extends JPanel {
      * @param cotizacion La cotización a agregar
      * @param indice Posición en la lista (usado como ID interno)
      */
-    private void agregarCotizacionATabla(Cotizacion cotizacion, int indice) {
+        private void agregarCotizacionATabla(Cotizacion cotizacion, int indice) {
         List<ProductoCotizacion> productos = cotizacion.getProductos();
         double subtotalSinIgv = 0.0;
-        
         for (ProductoCotizacion p : productos) {
             subtotalSinIgv += p.getSubtotal();
         }
         
-        // Datos del cliente
-        String ruc = (cotizacion.getCliente() != null && cotizacion.getCliente().getRuc() != null)
-                ? cotizacion.getCliente().getRuc() : "-";
-        String razonSocial = (cotizacion.getCliente() != null && cotizacion.getCliente().getRazonSocial() != null)
-                ? cotizacion.getCliente().getRazonSocial() : "-";
-        String condicionPago = (cotizacion.getCondicionPago() == null) 
-                ? "-" : cotizacion.getCondicionPago().toString();
+        String ruc = (cotizacion.getCliente() != null) ? cotizacion.getCliente().getRuc() : "-";
+        String razonSocial = (cotizacion.getCliente() != null) ? cotizacion.getCliente().getRazonSocial() : "-";
+        String condicionPago = (cotizacion.getCondicionPago() == null) ? "-" : cotizacion.getCondicionPago().toString();
         
-        // Verificar si ya tiene factura emitida (usando ÍNDICE como ID)
-        String idFactura;
+        String estadoFactura;
         
-        if (cotizacionesFacturadas.contains(indice)) {
-            // Ya tiene factura
-            idFactura = mapaIdFacturas.get(indice);
-            condicionPago = condicionPago + " ✓ FACTURADA";
+        // USAMOS EL CAMPO PERSISTENTE DEL MODELO
+        if (cotizacion.isFacturada()) {
+            estadoFactura = "✓ FACTURADA"; // O puedes poner el ID si lo guardaras en la cotización
         } else {
-            // Sin factura
-            idFactura = "Pendiente de emisión";
+            estadoFactura = "PENDIENTE";
         }
         
-        // Construir lista de productos
-        StringBuilder listaProductos = new StringBuilder();
-        listaProductos.append("<html>");
+        // Construir HTML lista productos (sin cambios)
+        StringBuilder listaProductos = new StringBuilder("<html>");
         for (int i = 0; i < productos.size(); i++) {
             ProductoCotizacion p = productos.get(i);
             listaProductos.append("• ").append(p.getDescripcion());
-            if (i < productos.size() - 1) {
-                listaProductos.append("<br>");
-            }
+            if (i < productos.size() - 1) listaProductos.append("<br>");
         }
         listaProductos.append("</html>");
         
         Object[] fila = new Object[] {
-            idFactura,
+            estadoFactura, // Columna 0: Estado
             ruc,
             razonSocial,
             listaProductos.toString(),
             String.format("%.2f", subtotalSinIgv),
             condicionPago
         };
-        
         modeloTabla.addRow(fila);
     }
 
@@ -1166,6 +1147,41 @@ public class ComprobanteFormView extends JPanel {
                         datosXML.serie,
                         datosXML.numero);
                     
+                    Cliente clienteFactura = new Cliente();
+                    clienteFactura.setId(0); // 0 para que el servicio decida si crea o actualiza (según tu lógica de servicio)
+                    clienteFactura.setRuc(datosXML.rucCliente);
+                    clienteFactura.setRazonSocial(datosXML.razonSocialCliente);
+                    // Datos que quizás no tenemos en el form de factura, ponemos vacíos para evitar nulls
+                    clienteFactura.setDireccion(""); 
+                    clienteFactura.setTelefono("");
+                    clienteFactura.setEmail("");
+                    clienteFactura.setNombreContacto("");
+                    
+                    cotizacion.setFacturada(true);
+                    cotizacionController.actualizarCotizacion(cotizacion);
+                    if (clienteService != null) {
+                    // Nota: Tu servicio debe ser capaz de buscar por RUC para no duplicar
+                    // Si tu servicio guarda ciegamente, podrías tener duplicados.
+                    // Lo ideal es: Cliente existente = service.buscarPorRuc(...);
+                    clienteService.guardarCliente(clienteFactura);
+                    System.out.println("Cliente guardado/actualizado: " + datosXML.razonSocialCliente);
+                    }
+
+                    ComprobanteElectronico ce = new ComprobanteElectronico();
+                    ce.setId(idFacturaGenerado);
+                    ce.setFechaEmision(LocalDateTime.ofInstant(datosXML.fechaEmision.toInstant(), ZoneId.systemDefault()));
+                    ce.setRucCliente(datosXML.rucCliente);
+                    ce.setRazonSocialCliente(datosXML.razonSocialCliente);
+                    ce.setTotal(cotizacion.getTotal());
+                    ce.setItems(cotizacion.getProductos()); // Aquí guardamos la lista de lo que llevaron
+                    ce.setTipoComprobante("Factura");
+                    ce.setCondicionPago(datosXML.esCredito ? "CREDITO" : "CONTADO");
+                    
+                    if (comprobanteService != null) {
+                        comprobanteService.registrarComprobante(ce);
+                        System.out.println("Comprobante registrado en historial: " + idFacturaGenerado);
+                    }
+
                     cotizacionesFacturadas.add(indiceCotizacion); // Usar índice
                     mapaIdFacturas.put(indiceCotizacion, idFacturaGenerado); // Usar índice
                     
@@ -1174,16 +1190,12 @@ public class ComprobanteFormView extends JPanel {
                     
                     SwingUtilities.invokeLater(() -> {
                         restaurarBoton();
-                        
-                        // Actualizar la tabla COMPLETA
-                        refrescarTablaCompleta();
-                        
+                        refrescarTablaCompleta(); // Ahora se verá como "FACTURADA"
                         mostrarSecciones(false);
                         tablaProductos.clearSelection();
-                        
                         mostrarDialogoExito(xmlFinal, pdfFinal);
                     });
-                    
+                                        
                 } catch (Exception ex) {
                     SwingUtilities.invokeLater(() -> {
                         restaurarBoton();

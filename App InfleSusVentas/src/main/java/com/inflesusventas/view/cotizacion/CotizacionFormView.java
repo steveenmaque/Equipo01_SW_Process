@@ -440,12 +440,13 @@ public class CotizacionFormView extends JPanel {
             
             // Crear cliente
             Cliente cliente = new Cliente(
-                txtRuc.getText().trim(),
-                txtRazonSocial.getText().trim(),
-                null,
-                txtTelefono.getText().trim(),
-                txtEmail.getText().trim(),
-                null
+                0, // ID (0 porque es nuevo o temporal en este contexto)
+                txtRuc.getText().trim(),            // RUC
+                txtRazonSocial.getText().trim(),    // Razón Social
+                "",                                 // Dirección (puedes poner "" o null si no tienes el campo en este form)
+                txtTelefono.getText().trim(),       // Teléfono
+                txtEmail.getText().trim(),          // Email
+                ""                                  // Nombre Contacto (puedes poner "" o null)
             );
             
             // Obtener condición de pago

@@ -13,7 +13,8 @@ public class Cotizacion {
     private boolean mostrarConIGV;
     private String moneda = "PEN";
     private double tipoCambio = 3.85;
-
+    private boolean facturada = false; 
+    
     // --- ENUM CORREGIDO (Con descripciones reales) ---
     public enum CondicionPago {
         CONTADO("Contado contra entrega"),
@@ -55,7 +56,8 @@ public class Cotizacion {
     public void setMoneda(String moneda) { this.moneda = moneda; }
     public double getTipoCambio() { return tipoCambio; }
     public void setTipoCambio(double tipoCambio) { this.tipoCambio = tipoCambio; }
-
+    public boolean isFacturada() { return facturada; }
+    public void setFacturada(boolean facturada) { this.facturada = facturada; }
     // --- MÉTODOS CALCULADOS ---
     public double getSubtotal() {
         if (productos == null) return 0.0;

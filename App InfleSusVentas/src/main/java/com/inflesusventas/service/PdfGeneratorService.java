@@ -105,23 +105,33 @@ public class PdfGeneratorService {
         
         String rutaCompleta = DIRECTORIO_PDF + nombreArchivo;
         
-        // Crear el PDF
         PdfWriter writer = new PdfWriter(rutaCompleta);
         PdfDocument pdfDoc = new PdfDocument(writer);
         Document document = new Document(pdfDoc, PageSize.A4);
         
-        // Márgenes
-        document.setMargins(40, 40, 40, 40);
+        // Márgenes ajustados para aprovechar espacio
+        document.setMargins(30, 30, 30, 30);
         
-        // Agregar contenido
+        // 1. ENCABEZADO
         agregarEncabezadoConLogo(document, cotizacion);
         agregarLineaSeparadora(document, colorPrimario);
+        
+        // 2. DATOS
         agregarInformacionCotizacion(document, cotizacion);
         agregarDatosCliente(document, cotizacion);
+        
+        // 3. PRODUCTOS (Con descripción larga ajustada)
         agregarTablaProductos(document, cotizacion);
+        
+        // 4. MONTOS Y BANCOS (Lado a lado o secuencial)
+        // Primero el resumen de dinero a la derecha
         agregarResumenMontos(document, cotizacion);
-        agregarCondicionesVigencia(document, cotizacion);
-        agregarPiePagina(document);
+        
+        // Luego la tabla de bancos (Clave para tu diseño)
+        agregarDatosBancarios(document);
+        
+        // 5. PIE DE PÁGINA (Condiciones y Garantía)
+        agregarCondicionesLegales(document, cotizacion);
         
         document.close();
         
@@ -297,39 +307,125 @@ public class PdfGeneratorService {
     /**
      * Agrega tabla de productos con diseño profesional
      */
-    private void agregarTablaProductos(Document document, Cotizacion cotizacion) {
-        Paragraph tituloProductos = new Paragraph("DETALLE DE PRODUCTOS / SERVICIOS")
-            .setFontSize(12)
-            .setBold()
-            .setFontColor(colorPrimario);
-        document.add(tituloProductos);
-        
-        // Tabla de productos
-        Table productosTable = new Table(UnitValue.createPercentArray(new float[]{1, 4, 1, 1.5f, 1.5f}));
-        productosTable.setWidth(UnitValue.createPercentValue(100));
-        
-        // Encabezados
-        String[] headers = {"Código", "Descripción", "Cant.", "P. Unit. (S/)", "Subtotal (S/)"};
-        for (String header : headers) {
-            Cell headerCell = new Cell();
-            headerCell.add(new Paragraph(header).setBold().setFontColor(ColorConstants.WHITE));
-            headerCell.setBackgroundColor(colorPrimario);
-            headerCell.setTextAlignment(TextAlignment.CENTER);
-            headerCell.setPadding(10);
-            productosTable.addHeaderCell(headerCell);
+        private void agregarTablaProductos(Document document, Cotizacion cotizacion) {
+            // Título
+            document.add(new Paragraph("DETALLE DE PRODUCTOS / SERVICIOS")
+                .setFontSize(11).setBold().setFontColor(colorPrimario));
+            
+            // ANCHOS AJUSTADOS: Damos 50% de ancho a la descripción para el texto largo
+            // Columnas: Item, Cant, Und, Descripción, P.Unit, Total
+            float[] columnWidths = {1, 1, 1, 6, 2, 2}; 
+            Table productosTable = new Table(UnitValue.createPercentArray(columnWidths));
+            productosTable.setWidth(UnitValue.createPercentValue(100));
+            
+            // Encabezados
+            String[] headers = {"N.", "Cant.", "Und.", "Descripción Técnica", "P. Unit", "Total"};
+            for (String header : headers) {
+                Cell cell = new Cell().add(new Paragraph(header).setBold().setFontSize(9).setFontColor(ColorConstants.WHITE));
+                cell.setBackgroundColor(colorPrimario);
+                cell.setTextAlignment(TextAlignment.CENTER);
+                productosTable.addHeaderCell(cell);
+            }
+            
+            int item = 1;
+            for (ProductoCotizacion producto : cotizacion.getProductos()) {
+                // Filas con alineación TOP para que el texto largo se vea bien
+                productosTable.addCell(crearCeldaCuerpo(String.valueOf(item++), TextAlignment.CENTER));
+                productosTable.addCell(crearCeldaCuerpo(String.valueOf(producto.getCantidad()), TextAlignment.CENTER));
+                productosTable.addCell(crearCeldaCuerpo("UND", TextAlignment.CENTER)); // O producto.getUnidad()
+                
+                // AQUÍ ESTÁ EL TRUCO: Alineación IZQUIERDA para el texto largo
+                productosTable.addCell(crearCeldaCuerpo(producto.getDescripcion(), TextAlignment.LEFT));
+                
+                productosTable.addCell(crearCeldaCuerpo(String.format("S/ %.2f", producto.getPrecioBase()), TextAlignment.RIGHT));
+                productosTable.addCell(crearCeldaCuerpo(String.format("S/ %.2f", producto.getSubtotal()), TextAlignment.RIGHT));
+            }
+            
+            document.add(productosTable);
+            document.add(new Paragraph("\n")); // Espacio
         }
+
+        private void agregarDatosBancarios(Document document) {
+        document.add(new Paragraph("INFORMACIÓN DE PAGO")
+            .setFontSize(10).setBold().setFontColor(colorSecundario));
+
+        // Tabla simple para bancos
+        Table bancoTable = new Table(UnitValue.createPercentArray(new float[]{2, 3, 4}));
+        bancoTable.setWidth(UnitValue.createPercentValue(100));
         
-        // Filas de productos
-        for (ProductoCotizacion producto : cotizacion.getProductos()) {
-            productosTable.addCell(crearCeldaProducto(producto.getCodigo(), TextAlignment.CENTER));
-            productosTable.addCell(crearCeldaProducto(producto.getDescripcion(), TextAlignment.LEFT));
-            productosTable.addCell(crearCeldaProducto(String.valueOf(producto.getCantidad()), TextAlignment.CENTER));
-            productosTable.addCell(crearCeldaProducto(String.format("%.2f", producto.getPrecioBase()), TextAlignment.RIGHT));
-            productosTable.addCell(crearCeldaProducto(String.format("%.2f", producto.getSubtotal()), TextAlignment.RIGHT));
+        // Estilo encabezado gris
+        Color grisHeader = new DeviceRgb(240, 240, 240);
+        String[] headers = {"Banco", "N° Cuenta", "Titular / Detalle"};
+        for(String h : headers) {
+            bancoTable.addHeaderCell(new Cell().add(new Paragraph(h).setBold().setFontSize(8))
+                .setBackgroundColor(grisHeader));
         }
-        
-        document.add(productosTable);
+
+        // Fila 1: BBVA
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("banco.bbva.nombre", "BBVA")));
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("banco.bbva.cuenta", "-")));
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("banco.bbva.titular", "")));
+
+        // Fila 2: Nación
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("banco.nacion.nombre", "Banco Nación")));
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("banco.nacion.cuenta", "-")));
+        bancoTable.addCell(crearCeldaBanco("Cuenta de Detracciones"));
+
+        document.add(bancoTable);
         document.add(new Paragraph("\n"));
+        }
+
+        private void agregarCondicionesLegales(Document document, Cotizacion cotizacion) {
+            // Contenedor visual (Cuadro gris claro)
+            Table condicionesTable = new Table(1);
+            condicionesTable.setWidth(UnitValue.createPercentValue(100));
+            
+            Cell cell = new Cell();
+            cell.setBackgroundColor(new DeviceRgb(250, 250, 250)); // Gris muy suave
+            cell.setBorder(Border.NO_BORDER);
+            cell.setPadding(10);
+            
+            // 1. Validez y Tiempos (Negrita)
+            cell.add(new Paragraph("CONDICIONES COMERCIALES:")
+                .setBold().setFontSize(9).setFontColor(colorPrimario));
+                
+            cell.add(new Paragraph("• Validez de la oferta: " + configuracion.getProperty("condicion.validez_oferta", "30 días"))
+                .setFontSize(8));
+            cell.add(new Paragraph("• Tiempo de entrega: " + configuracion.getProperty("condicion.tiempo_entrega_defecto", "5-7 días"))
+                .setFontSize(8));
+                
+            // 2. Garantía (Itálica)
+            cell.add(new Paragraph("\n" + configuracion.getProperty("texto.garantia", ""))
+                .setFontSize(8).setItalic());
+                
+            // 3. Requisitos Técnicos
+            cell.add(new Paragraph("NOTAS IMPORTANTES:")
+                .setBold().setFontSize(9).setMarginTop(5));
+            
+            cell.add(new Paragraph("- " + configuracion.getProperty("texto.requisito.electrico", ""))
+                .setFontSize(8));
+            cell.add(new Paragraph("- " + configuracion.getProperty("texto.requisito.arte", ""))
+                .setFontSize(8));
+            cell.add(new Paragraph("- " + configuracion.getProperty("texto.nota.motor", ""))
+                .setFontSize(8));
+                
+            condicionesTable.addCell(cell);
+            document.add(condicionesTable);
+            
+            // Firma y cierre final
+            document.add(new Paragraph("\n\n" + configuracion.getProperty("empresa.representante", "Ventas"))
+                .setTextAlignment(TextAlignment.CENTER).setBold());
+            document.add(new Paragraph("Departamento de Ventas - " + configuracion.getProperty("empresa.nombre_comercial"))
+                .setTextAlignment(TextAlignment.CENTER).setFontSize(8));
+        }
+
+    // Helper mejorado para celdas
+    private Cell crearCeldaCuerpo(String texto, TextAlignment alineacion) {
+        return new Cell()
+            .add(new Paragraph(texto).setFontSize(9)) // Fuente un poco más chica
+            .setTextAlignment(alineacion)
+            .setPadding(4)
+            .setVerticalAlignment(VerticalAlignment.TOP); // Clave para descripciones largas
     }
     
     private Cell crearCeldaProducto(String texto, TextAlignment alignment) {
@@ -699,6 +795,39 @@ public class PdfGeneratorService {
         document.add(detTable);
         document.add(new Paragraph("\n"));
     }
+
+        private void agregarCuentasBancarias(Document document) {
+        // Título pequeño
+        document.add(new Paragraph("Información de Pago:").setBold().setFontSize(10));
+
+        // Tabla de 3 columnas: Banco, Cuenta, CCI (ajusta según necesites)
+        Table bancoTable = new Table(UnitValue.createPercentArray(new float[]{2, 3, 3}));
+        bancoTable.setWidth(UnitValue.createPercentValue(90)); // Un poco más angosta que el total
+        
+        // Estilo de encabezado de banco
+        Color grisOscuro = new DeviceRgb(230, 230, 230);
+        
+        bancoTable.addHeaderCell(new Cell().add(new Paragraph("Banco").setBold().setFontSize(8)).setBackgroundColor(grisOscuro));
+        bancoTable.addHeaderCell(new Cell().add(new Paragraph("N° Cuenta").setBold().setFontSize(8)).setBackgroundColor(grisOscuro));
+        bancoTable.addHeaderCell(new Cell().add(new Paragraph("Titular").setBold().setFontSize(8)).setBackgroundColor(grisOscuro));
+
+        // Fila 1: BBVA (Datos desde tu properties o hardcoded si son fijos)
+        bancoTable.addCell(crearCeldaBanco("BBVA Continental"));
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("empresa.banco.bbva", "0011-xxxx-xxxx"))); 
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("empresa.razon_social")));
+
+        // Fila 2: Banco de la Nación (Detracción)
+        bancoTable.addCell(crearCeldaBanco("Banco de la Nación (Detracción)"));
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("empresa.banco.nacion", "00-006-038646")));
+        bancoTable.addCell(crearCeldaBanco(configuracion.getProperty("empresa.razon_social")));
+
+        document.add(bancoTable);
+        document.add(new Paragraph("\n"));
+    }
+
+        private Cell crearCeldaBanco(String texto) {
+            return new Cell().add(new Paragraph(texto).setFontSize(8)).setPadding(3).setBorder(new SolidBorder(ColorConstants.GRAY, 0.5f));
+        }
 
     /**
      * Información de crédito

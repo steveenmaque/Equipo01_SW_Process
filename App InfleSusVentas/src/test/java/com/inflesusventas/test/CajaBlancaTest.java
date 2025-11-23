@@ -116,6 +116,7 @@ class CajaBlancaTest {
     @DisplayName("CB08 - Cliente constructor completo")
     void testClienteConstructorCompleto() {
         Cliente cliente = new Cliente(
+                0,
                 "20123456789",
                 "Test SAC",
                 "Av. Test 123",

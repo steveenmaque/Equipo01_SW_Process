@@ -2,8 +2,11 @@ package com.inflesusventas.view;
 
 import com.inflesusventas.controller.CotizacionController;
 import com.inflesusventas.controller.GuiaRemisionController;
+import com.inflesusventas.service.ClienteService;
+import com.inflesusventas.service.ComprobanteService;
 import com.inflesusventas.view.cotizacion.CotizacionFormView;
 import com.inflesusventas.view.comprobante.ComprobanteFormView;
+import com.inflesusventas.view.comprobante.ComprobanteListView;
 import com.inflesusventas.view.guia.GuiaFormView;
 import org.springframework.context.ApplicationContext;
 
@@ -245,23 +248,58 @@ public class MainWindow extends JFrame {
     }
 
     private void mostrarClientes() {
-        mostrarEnConstruccion("Módulo de Clientes");
+        try {
+            panelContenido.removeAll();
+            
+            // Obtenemos el controlador (Spring se encarga de inyectarle el ComprobanteService)
+            com.inflesusventas.controller.ClienteController clienteCtrl = 
+                context.getBean(com.inflesusventas.controller.ClienteController.class);
+            
+            panelContenido.add(clienteCtrl.getView());
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        panelContenido.revalidate();
+        panelContenido.repaint();
     }
 
     private void mostrarVentas() {
         mostrarEnConstruccion("Módulo de Ventas");
     }
 
-    private void mostrarComprobantes() {
-        panelContenido.removeAll();
-        panelContenido.add(new ComprobanteFormView(cotizacionController));
-        panelContenido.revalidate();
-        panelContenido.repaint();
-    }
-
-    // MODIFICADO: Método para mostrar Guías de Remisión
-    private void mostrarGuias() {
-        panelContenido.removeAll();
+        private void mostrarComprobantes() {
+            panelContenido.removeAll();
+            
+            try {
+                // 1. Obtener los servicios necesarios
+                ClienteService clienteService = context.getBean(ClienteService.class);
+                ComprobanteService compService = context.getBean(ComprobanteService.class);
+                
+                // 2. Crear la vista NUEVA (esto fuerza la recarga de datos)
+                ComprobanteFormView vistaComprobantes = new ComprobanteFormView(
+                    cotizacionController, 
+                    clienteService, 
+                    compService
+                );
+                
+                // 3. IMPORTANTE: Forzar la lectura de datos explícitamente
+                vistaComprobantes.cargarProductosDesdeCotizacion();
+                
+                panelContenido.add(vistaComprobantes);
+                System.out.println("✓ Vista de comprobantes actualizada");
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error al cargar comprobantes: " + e.getMessage());
+            }
+            
+            panelContenido.revalidate();
+            panelContenido.repaint();
+        }
+            // MODIFICADO: Método para mostrar Guías de Remisión
+            private void mostrarGuias() {
+                panelContenido.removeAll();
 
         try {
             // Obtener el controlador de guías desde Spring
@@ -285,7 +323,15 @@ public class MainWindow extends JFrame {
 
         panelContenido.revalidate();
         panelContenido.repaint();
-    }
+        }
+
+            private void mostrarHistorialComprobantes() {
+            panelContenido.removeAll();
+            ComprobanteService compService = context.getBean(ComprobanteService.class);
+            panelContenido.add(new ComprobanteListView(compService));
+            panelContenido.revalidate();
+            panelContenido.repaint();
+            }
 
     private void mostrarReportes() {
         mostrarEnConstruccion("Módulo de Reportes");
