@@ -73,7 +73,7 @@ public class NotaCreditoWizardView extends JPanel {
         JButton btnContinuar = new JButton("Continuar →");
         btnContinuar.setPreferredSize(new Dimension(150, 35));
         btnContinuar.setBackground(COLOR_PRIMARIO);
-        btnContinuar.setForeground(Color.WHITE);
+        btnContinuar.setForeground(Color.BLACK);
         btnContinuar.addActionListener(e -> irAPaso2());
 
         JButton btnCancelar = new JButton("Cancelar");
@@ -100,7 +100,7 @@ public class NotaCreditoWizardView extends JPanel {
         JButton btnContinuar = new JButton("Continuar →");
         btnContinuar.setPreferredSize(new Dimension(150, 35));
         btnContinuar.setBackground(COLOR_PRIMARIO);
-        btnContinuar.setForeground(Color.WHITE);
+        btnContinuar.setForeground(Color.BLACK);
         btnContinuar.addActionListener(e -> irAPaso3());
 
         JButton btnCancelar = new JButton("Cancelar");
@@ -128,7 +128,7 @@ public class NotaCreditoWizardView extends JPanel {
         JButton btnEmitir = new JButton("EMITIR NC");
         btnEmitir.setPreferredSize(new Dimension(180, 40));
         btnEmitir.setBackground(new Color(40, 167, 69));
-        btnEmitir.setForeground(Color.WHITE);
+        btnEmitir.setForeground(Color.BLACK);
         btnEmitir.setFont(new Font("Arial", Font.BOLD, 14));
         btnEmitir.addActionListener(e -> emitirNC());
 

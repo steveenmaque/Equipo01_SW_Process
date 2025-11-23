@@ -131,13 +131,16 @@ public class GuiaFormView extends JPanel {
         int row = 0;
 
         // Tipo de Remitente
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
         JLabel lblRemitente = new JLabel("Seleccionar:");
         lblRemitente.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblRemitente, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.7;
-        cmbTipoRemitente = new JComboBox<>(new String[]{"REMITENTE", "DESTINATARIO"});
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        cmbTipoRemitente = new JComboBox<>(new String[] { "REMITENTE", "DESTINATARIO" });
         cmbTipoRemitente.setSelectedIndex(0);
         cmbTipoRemitente.setFont(new Font("Arial", Font.PLAIN, 13));
         panel.add(cmbTipoRemitente, gbc);
@@ -145,7 +148,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Operación de comercio exterior
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblComercio = new JLabel("Operación de comercio exterior:");
         lblComercio.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblComercio, gbc);
@@ -166,7 +170,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Motivo de traslado
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblMotivo = new JLabel("Motivo de traslado:");
         lblMotivo.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblMotivo, gbc);
@@ -192,12 +197,15 @@ public class GuiaFormView extends JPanel {
         int row = 0;
 
         // Tipo de documento
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
         JLabel lblTipoDoc = new JLabel("Tipo de documento:");
         lblTipoDoc.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblTipoDoc, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.7;
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
         cmbTipoDocumento = new JComboBox<>(TipoDocumento.values());
         cmbTipoDocumento.setSelectedItem(TipoDocumento.RUC);
         cmbTipoDocumento.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -206,7 +214,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Número de documento
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblNumDoc = new JLabel("Número de documento: *");
         lblNumDoc.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblNumDoc, gbc);
@@ -219,7 +228,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Razón Social
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblRazon = new JLabel("Razón Social / Nombre: *");
         lblRazon.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblRazon, gbc);
@@ -238,7 +248,7 @@ public class GuiaFormView extends JPanel {
         panel.setLayout(new BorderLayout(10, 10));
 
         // Tabla
-        String[] columnas = {"Código", "Descripción", "Cantidad", "Peso (KG)"};
+        String[] columnas = { "Código", "Descripción", "Cantidad", "Peso (KG)" };
         modeloTablaBienes = new DefaultTableModel(columnas, 0);
         tablaBienes = new JTable(modeloTablaBienes);
         tablaBienes.setRowHeight(28);
@@ -286,19 +296,23 @@ public class GuiaFormView extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         // Punto de partida
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.3;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.3;
         JLabel lblPartida = new JLabel("Punto de Partida: *");
         lblPartida.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblPartida, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.7;
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
         txtPuntoPartida = new JTextField(40);
         txtPuntoPartida.setFont(new Font("Arial", Font.PLAIN, 13));
         txtPuntoPartida.setText("Av. Ejemplo 123, Lima, Perú"); // Valor por defecto
         panel.add(txtPuntoPartida, gbc);
 
         // Punto de llegada
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         JLabel lblLlegada = new JLabel("Punto de Llegada: *");
         lblLlegada.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblLlegada, gbc);
@@ -323,12 +337,15 @@ public class GuiaFormView extends JPanel {
         int row = 0;
 
         // Tipo de transporte
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
         JLabel lblTipo = new JLabel("Tipo de transporte:");
         lblTipo.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblTipo, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.7;
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
         cmbTipoTransporte = new JComboBox<>(TipoTransporte.values());
         cmbTipoTransporte.setSelectedItem(TipoTransporte.TRANSPORTE_PRIVADO);
         cmbTipoTransporte.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -337,7 +354,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Placa
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblPlaca = new JLabel("Número de placa: *");
         lblPlaca.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblPlaca, gbc);
@@ -350,7 +368,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Entidad autorización
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblEntidad = new JLabel("Entidad emisora:");
         lblEntidad.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblEntidad, gbc);
@@ -364,7 +383,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Número de licencia
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblLicencia = new JLabel("Número de licencia: *");
         lblLicencia.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblLicencia, gbc);
@@ -377,7 +397,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Nombre conductor
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblNombre = new JLabel("Nombre del conductor: *");
         lblNombre.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblNombre, gbc);
@@ -390,7 +411,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Apellidos conductor
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblApellidos = new JLabel("Apellidos del conductor: *");
         lblApellidos.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblApellidos, gbc);
@@ -403,7 +425,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // DNI conductor
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblDni = new JLabel("DNI del conductor: *");
         lblDni.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblDni, gbc);
@@ -416,7 +439,8 @@ public class GuiaFormView extends JPanel {
         row++;
 
         // Fecha de inicio
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lblFecha = new JLabel("Fecha de inicio de traslado:");
         lblFecha.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(lblFecha, gbc);
@@ -440,7 +464,7 @@ public class GuiaFormView extends JPanel {
         btnGenerar.setFont(new Font("Arial", Font.BOLD, 18));
         btnGenerar.setPreferredSize(new Dimension(400, 50));
         btnGenerar.setBackground(COLOR_NARANJA);
-        btnGenerar.setForeground(Color.WHITE);
+        btnGenerar.setForeground(Color.BLACK);
         btnGenerar.setFocusPainted(false);
         btnGenerar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnGenerar.addActionListener(e -> generarGuia());
@@ -459,8 +483,7 @@ public class GuiaFormView extends JPanel {
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(COLOR_FONDO, 2),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
         JLabel lblTitulo = new JLabel(titulo);
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 18));
@@ -514,7 +537,7 @@ public class GuiaFormView extends JPanel {
                 }
 
                 controller.agregarBien(codigo, descripcion, cantidad, peso);
-                modeloTablaBienes.addRow(new Object[]{codigo, descripcion, cantidad, peso});
+                modeloTablaBienes.addRow(new Object[] { codigo, descripcion, cantidad, peso });
 
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this,
@@ -557,8 +580,7 @@ public class GuiaFormView extends JPanel {
         guia.setTipoRemitente(
                 cmbTipoRemitente.getSelectedItem().equals("REMITENTE")
                         ? TipoRemitente.REMITENTE
-                        : TipoRemitente.DESTINATARIO
-        );
+                        : TipoRemitente.DESTINATARIO);
         guia.setOperacionComercioExterior(rdoComercioExteriorSi.isSelected());
         guia.setMotivoTraslado((MotivoTraslado) cmbMotivoTraslado.getSelectedItem());
 
@@ -764,7 +786,8 @@ public class GuiaFormView extends JPanel {
                     Component[] children = panelPrincipal.getComponents();
                     if (children.length > 0 && children[0] instanceof JPanel) {
                         JPanel encabezado = (JPanel) children[0];
-                        Component centerComp = ((BorderLayout) encabezado.getLayout()).getLayoutComponent(BorderLayout.CENTER);
+                        Component centerComp = ((BorderLayout) encabezado.getLayout())
+                                .getLayoutComponent(BorderLayout.CENTER);
                         if (centerComp instanceof JPanel) {
                             JPanel textos = (JPanel) centerComp;
                             Component[] labels = textos.getComponents();
