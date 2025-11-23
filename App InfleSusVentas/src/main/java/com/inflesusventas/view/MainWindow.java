@@ -133,9 +133,7 @@ public class MainWindow extends JFrame {
         panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("Nueva Cotización", this::mostrarCotizacion));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("Clientes", this::mostrarClientes));
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("Ventas", this::mostrarVentas));
+        panel.add(crearBotonMenu("Clientes y Ventas", this::mostrarClientes));
         panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("Comprobantes", this::mostrarComprobantes));
         panel.add(Box.createVerticalStrut(5));
@@ -144,8 +142,6 @@ public class MainWindow extends JFrame {
         panel.add(crearBotonMenu("Notas de Crédito", this::mostrarNotasCredito));
         panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("  → Historial NC", this::mostrarHistorialNC));
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("Reportes", this::mostrarReportes));
         panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("Configuración", this::mostrarConfiguracion));
 
