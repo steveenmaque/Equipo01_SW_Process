@@ -24,6 +24,10 @@ public class NotaCreditoWizardView extends JPanel {
 
     private int pasoActual = 1;
 
+    // Labels para el indicador de pasos
+    private JLabel lblPaso1, lblPaso2, lblPaso3;
+    private JLabel lblFlecha1, lblFlecha2;
+
     public NotaCreditoWizardView(NotaCreditoController controller) {
         this.controller = controller;
         controller.iniciarNuevaNota();
@@ -46,6 +50,16 @@ public class NotaCreditoWizardView extends JPanel {
 
         add(panelEncabezado, BorderLayout.NORTH);
 
+        // Indicador de progreso de pasos
+        JPanel panelIndicadorPasos = crearIndicadorPasos();
+
+        // Panel contenedor para encabezado + indicador
+        JPanel panelSuperior = new JPanel(new BorderLayout());
+        panelSuperior.add(panelEncabezado, BorderLayout.NORTH);
+        panelSuperior.add(panelIndicadorPasos, BorderLayout.CENTER);
+
+        add(panelSuperior, BorderLayout.NORTH);
+
         // Panel de pasos con CardLayout
         cardLayout = new CardLayout();
         panelPasos = new JPanel(cardLayout);
@@ -62,6 +76,93 @@ public class NotaCreditoWizardView extends JPanel {
         cardLayout.show(panelPasos, "PASO1");
 
         add(panelPasos, BorderLayout.CENTER);
+    }
+
+    /**
+     * Crea el indicador visual de pasos (1 → 2 → 3)
+     */
+    private JPanel crearIndicadorPasos() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
+        panel.setBackground(new Color(240, 240, 240));
+
+        // Paso 1
+        lblPaso1 = crearLabelPaso("1. Datos Generales", true);
+        panel.add(lblPaso1);
+
+        // Flecha 1
+        lblFlecha1 = new JLabel("→");
+        lblFlecha1.setFont(new Font("Arial", Font.BOLD, 20));
+        lblFlecha1.setForeground(Color.GRAY);
+        panel.add(lblFlecha1);
+
+        // Paso 2
+        lblPaso2 = crearLabelPaso("2. Revisión de Ítems", false);
+        panel.add(lblPaso2);
+
+        // Flecha 2
+        lblFlecha2 = new JLabel("→");
+        lblFlecha2.setFont(new Font("Arial", Font.BOLD, 20));
+        lblFlecha2.setForeground(Color.GRAY);
+        panel.add(lblFlecha2);
+
+        // Paso 3
+        lblPaso3 = crearLabelPaso("3. Vista Previa", false);
+        panel.add(lblPaso3);
+
+        return panel;
+    }
+
+    /**
+     * Crea un label para un paso del wizard
+     */
+    private JLabel crearLabelPaso(String texto, boolean activo) {
+        JLabel lbl = new JLabel(texto);
+        lbl.setFont(new Font("Arial", Font.BOLD, 14));
+        lbl.setOpaque(true);
+        lbl.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+        if (activo) {
+            lbl.setBackground(COLOR_PRIMARIO);
+            lbl.setForeground(Color.BLACK);
+        } else {
+            lbl.setBackground(Color.WHITE);
+            lbl.setForeground(Color.GRAY);
+        }
+
+        lbl.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(activo ? COLOR_PRIMARIO : Color.LIGHT_GRAY, 2),
+                BorderFactory.createEmptyBorder(8, 15, 8, 15)));
+
+        return lbl;
+    }
+
+    /**
+     * Actualiza el indicador visual de pasos
+     */
+    private void actualizarIndicadorPasos() {
+        // Resetear todos los pasos
+        actualizarEstiloPaso(lblPaso1, pasoActual == 1);
+        actualizarEstiloPaso(lblPaso2, pasoActual == 2);
+        actualizarEstiloPaso(lblPaso3, pasoActual == 3);
+    }
+
+    /**
+     * Actualiza el estilo de un label de paso
+     */
+    private void actualizarEstiloPaso(JLabel lbl, boolean activo) {
+        if (activo) {
+            lbl.setBackground(COLOR_PRIMARIO);
+            lbl.setForeground(Color.BLACK);
+            lbl.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(COLOR_PRIMARIO, 2),
+                    BorderFactory.createEmptyBorder(8, 15, 8, 15)));
+        } else {
+            lbl.setBackground(Color.WHITE);
+            lbl.setForeground(Color.GRAY);
+            lbl.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(Color.LIGHT_GRAY, 2),
+                    BorderFactory.createEmptyBorder(8, 15, 8, 15)));
+        }
     }
 
     private JPanel crearPanelPaso1() {
@@ -174,6 +275,7 @@ public class NotaCreditoWizardView extends JPanel {
 
             cardLayout.show(panelPasos, "PASO2");
             pasoActual = 2;
+            actualizarIndicadorPasos();
 
         } catch (Exception ex) {
             ErrorHandler.mostrarError(this, "Error al cargar factura", ex);
@@ -184,16 +286,19 @@ public class NotaCreditoWizardView extends JPanel {
         paso3.cargarVistaPreviaNc(controller.getNotaActual());
         cardLayout.show(panelPasos, "PASO3");
         pasoActual = 3;
+        actualizarIndicadorPasos();
     }
 
     private void retrocederAPaso1() {
         cardLayout.show(panelPasos, "PASO1");
         pasoActual = 1;
+        actualizarIndicadorPasos();
     }
 
     private void retrocederAPaso2() {
         cardLayout.show(panelPasos, "PASO2");
         pasoActual = 2;
+        actualizarIndicadorPasos();
     }
 
     private void emitirNC() {
@@ -230,6 +335,7 @@ public class NotaCreditoWizardView extends JPanel {
             paso1.limpiarFormulario();
             cardLayout.show(panelPasos, "PASO1");
             pasoActual = 1;
+            actualizarIndicadorPasos();
 
         } catch (Exception ex) {
             ErrorHandler.mostrarError(this, "Error al generar NC", ex);
@@ -242,6 +348,7 @@ public class NotaCreditoWizardView extends JPanel {
             paso1.limpiarFormulario();
             cardLayout.show(panelPasos, "PASO1");
             pasoActual = 1;
+            actualizarIndicadorPasos();
         }
     }
 

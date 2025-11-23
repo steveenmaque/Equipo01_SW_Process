@@ -100,15 +100,31 @@ public class NotaCreditoPaso1View extends JPanel {
     }
 
     public boolean validarCampos() {
+        boolean valido = true;
+
+        // Resetear bordes
+        txtFacturaRef.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        txtMotivo.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+        // Validar factura de referencia
         if (txtFacturaRef.getText().trim().isEmpty()) {
+            txtFacturaRef.setBorder(BorderFactory.createLineBorder(Color.RED, 2));
             ErrorHandler.mostrarAdvertencia(this, "Debe ingresar el número de factura de referencia.");
-            return false;
+            txtFacturaRef.requestFocus();
+            valido = false;
         }
+
+        // Validar motivo
         if (txtMotivo.getText().trim().isEmpty()) {
-            ErrorHandler.mostrarAdvertencia(this, "Debe ingresar el motivo o sustento.");
-            return false;
+            txtMotivo.setBorder(BorderFactory.createLineBorder(Color.RED, 2));
+            if (valido) { // Solo mostrar mensaje si es el primer error
+                ErrorHandler.mostrarAdvertencia(this, "Debe ingresar el motivo o sustento.");
+                txtMotivo.requestFocus();
+            }
+            valido = false;
         }
-        return true;
+
+        return valido;
     }
 
     public void limpiarFormulario() {
