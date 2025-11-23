@@ -1,114 +1,82 @@
-# Reporte de errores
+# Anexo 2: Informe de errores encontrados
 
-El detalle de los errores encontrados serán indicados en el Anexo 2 - "Informe de errores encontrados":
+Este documento detalla los defectos identificados durante la ejecución de las pruebas de caja negra, específicamente aquellos casos donde el comportamiento actual del sistema no coincide con las reglas de negocio esperadas para un entorno de producción.
 
-## Anexo 2: "Informe de errores encontrados"
+##  Resumen de Defectos
 
----
-
-### Defecto DEF-001
-
-**ID Defecto:** DEF-001
-
-**Descripción del defecto:**  
-La clase `Cliente` no valida que el RUC tenga exactamente 11 dígitos. Permite establecer valores de RUC con cualquier cantidad de caracteres sin lanzar ninguna excepción.
-
-**Pasos - Pasos detallados junto con capturas de pantalla que evidencien los defectos encontrados:**
-1. Crear una instancia de la clase `Cliente` usando el constructor vacío
-2. Llamar al método `setRuc("201234567")` con un RUC de solo 9 dígitos
-3. Observar que el método NO lanza ninguna excepción
-4. El RUC inválido queda almacenado en el objeto sin validación
-
-**Captura de pantalla:**  
-![Error DEF-001](../imagenes/evidencias-pruebas/Screenshot_CN02.png)
-
-**Código de prueba que detectó el error:**
-```java
-@Test
-@DisplayName("CN02 - Validar RUC con menos de 11 dígitos (DEBE FALLAR)")
-void testValidarRucInvalido() {
-    Cliente cliente = new Cliente();
-    
-    // Este debería lanzar excepción pero NO LO HACE
-    assertThrows(IllegalArgumentException.class, () -> {
-        cliente.setRuc("201234567"); // Solo 9 dígitos
-    }, "Debería lanzar excepción con RUC inválido");
-}
-```
-
-**Fecha del defecto:** 2025-01-15
-
-**Detectado por (Tester):** Clisman
-
-**Estado del defecto:** Abierto
-
-**Corregido por:** 
-
-**Fecha de cierre:** 
-
-**Prioridad:** Alta
-
-**Impacto:**  
-Afecta el Requisito Funcional RF1 (Registro de clientes). Permite el registro de clientes con RUC inválido, violando las reglas de negocio establecidas que requieren que todo RUC tenga exactamente 11 dígitos.
+| ID Defecto | Descripción | Prioridad | Estado |
+|------------|-------------|-----------|--------|
+| DEF-01 | El sistema permite crear Notas de Crédito con motivo de sustento vacío. | Alta | Abierto |
+| DEF-02 | El sistema permite generar Cotizaciones sin un Cliente asignado. | Crítico | Abierto |
+| DEF-03 | El sistema permite emitir Comprobantes Electrónicos sin ítems (lista de productos vacía). | Crítico | Abierto |
 
 ---
 
-### Defecto DEF-002
+##  Detalle de Errores
 
-**ID Defecto:** DEF-002
+###  DEF-01: Motivo de sustento vacío en Nota de Crédito
 
-**Descripción del defecto:**  
-El constructor de la clase `ProductoCotizacion` tiene parámetros en orden incorrecto. El cuarto parámetro duplica el valor de `codigo` en lugar de recibir `unidadMedida`, lo que causa que la unidad de medida nunca se asigne correctamente.
-
-**Pasos - Pasos detallados junto con capturas de pantalla que evidencien los defectos encontrados:**
-1. Abrir el archivo `ProductoCotizacion.java` línea 20
-2. Revisar el constructor con parámetros
-3. Observar que el cuarto parámetro está definido como `String unidadMedida`
-4. Sin embargo, en línea 24 se ejecuta: `this.unidadMedida = unidadMedida;`
-5. Pero en `CotizacionController.java` línea 20, el constructor se llama incorrectamente:
-```java
-   new ProductoCotizacion(codigo, descripcion, cantidad, codigo, precioBase)
-   //                                                     ^^^^^^
-   // Está pasando "codigo" dos veces en vez de "unidadMedida"
-```
-
-**Código problemático en CotizacionController.java (línea 38-39):**
-```java
-ProductoCotizacion producto = new ProductoCotizacion(
-    codigo, descripcion, cantidad, codigo, precioUnitario);
-    //                             ^^^^^^ ERROR: debería ser "unidadMedida"
-```
-
-**Solución esperada:**
-```java
-ProductoCotizacion producto = new ProductoCotizacion(
-    codigo, descripcion, cantidad, unidadMedida, precioUnitario);
-```
-
-**Fecha del defecto:** 2025-01-15
-
-**Detectado por (Tester):** Clisman
-
-**Estado del defecto:** Abierto
-
-**Corregido por:** -
-
-**Fecha de cierre:** -
-
-**Prioridad:** Crítica
-
-**Impacto:**  
-Afecta gravemente el Requisito Funcional RF2 (Generación de cotizaciones). Impide que los productos se creen correctamente con su unidad de medida. Todos los productos tendrán el código duplicado en lugar de la unidad de medida (UND, KG, etc.), lo que genera documentos PDF incorrectos.
+- **ID Defecto:** DEF-01
+- **Descripción del defecto:** El sistema no valida que el campo "Motivo de Sustento" sea obligatorio al crear una Nota de Crédito. Actualmente acepta cadenas vacías sin lanzar error, violando la regla de negocio RN36.
+- **Pasos para reproducir:**
+  1. Instanciar un objeto `NotaCredito`.
+  2. Asignar una factura de referencia válida.
+  3. Asignar una cadena vacía `""` al campo `motivoSustento`.
+  4. Ejecutar el método de creación/validación.
+  5. **Resultado Actual:** El objeto se crea exitosamente con motivo vacío.
+  6. **Resultado Esperado:** El sistema debería lanzar una `IllegalArgumentException` o error de validación indicando que el motivo es obligatorio.
+- **Evidencia:**
+  > *Ver captura: `evidencias/CN14_NC_Motivo_Obligatorio_FALLO.png`*
+  > (El test `testValidarMotivoNotaCreditoObligatorio` confirma que `isEmpty()` es true en lugar de fallar).
+- **Fecha del defecto:** 2025-11-23
+- **Detectado por:** Junior Zelada Llaxa (Tester)
+- **Estado del defecto:**  Abierto
+- **Corregido por:** ---
+- **Fecha de cierre:** ---
+- **Prioridad:**  Alta 
 
 ---
 
-## Resumen de defectos
+###  DEF-02: Generación de Cotización sin Cliente
 
-| ID Defecto | Descripción resumida | Prioridad | Estado | Módulo afectado |
-|------------|---------------------|-----------|--------|-----------------|
-| DEF-001 | Cliente no valida RUC de 11 dígitos | Alta | Abierto | com.inflesusventas.model.Cliente |
-| DEF-002 | Constructor ProductoCotizacion con parámetros incorrectos | Crítica | Abierto | com.inflesusventas.controller.CotizacionController |
+- **ID Defecto:** DEF-02
+- **Descripción del defecto:** Es posible instanciar y procesar una `Cotizacion` con el campo `cliente` en `null`. Esto viola la integridad de los datos y la regla RN06/RN31.
+- **Pasos para reproducir:**
+  1. Crear una nueva instancia de `Cotizacion`.
+  2. Asignar `null` explícitamente al cliente (`setCliente(null)`).
+  3. Agregar productos válidos.
+  4. Intentar guardar o procesar la cotización.
+  5. **Resultado Actual:** El sistema permite la operación o retorna null en el getter sin error previo.
+  6. **Resultado Esperado:** El sistema debería impedir la creación de una cotización sin cliente asociado.
+- **Evidencia:**
+  > *Ver captura: `evidencias/CN15_Cotizacion_Sin_Cliente_FALLO.png`*
+  > (El test `testCotizacionSinClienteInvalida` muestra que el cliente permanece nulo sin rechazo).
+- **Fecha del defecto:** 2025-11-23
+- **Detectado por:** Junior Zelada Llaxa (Tester)
+- **Estado del defecto:**  Abierto
+- **Corregido por:** ---
+- **Fecha de cierre:** ---
+- **Prioridad:**  Crítico (Impide flujo de venta posterior)
 
-**Total de defectos encontrados:** 2  
-**Defectos críticos:** 1  
-**Defectos de alta prioridad:** 1
+---
+
+###  DEF-03: Emisión de Comprobante sin Ítems
+
+- **ID Defecto:** DEF-03
+- **Descripción del defecto:** El sistema permite crear un `ComprobanteElectronico` con una lista de ítems vacía. Un comprobante de pago debe tener al menos un ítem para ser válido ante SUNAT.
+- **Pasos para reproducir:**
+  1. Crear una instancia de `ComprobanteElectronico`.
+  2. Inicializar la lista de ítems como una lista vacía (`new ArrayList<>()`).
+  3. No agregar ningún `DetalleComprobante`.
+  4. Verificar el estado del objeto.
+  5. **Resultado Actual:** La lista de ítems está vacía y el objeto se considera válido por el sistema actual.
+  6. **Resultado Esperado:** Debería existir una validación que exija `items.size() > 0`.
+- **Evidencia:**
+  > *Ver captura: `evidencias/CN16_Comprobante_Sin_Items_FALLO.png`*
+  > (El test `testComprobanteSinItemsInvalido` confirma que la lista vacía es aceptada).
+- **Fecha del defecto:** 2025-11-23
+- **Detectado por:** Junior Zelada Llaxa (Tester)
+- **Estado del defecto:**  Abierto
+- **Corregido por:** ---
+- **Fecha de cierre:** ---
+- **Prioridad:**  Crítico
