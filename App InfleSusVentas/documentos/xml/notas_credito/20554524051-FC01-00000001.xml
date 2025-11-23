@@ -8,7 +8,7 @@
     <cac:DiscrepancyResponse>
         <cbc:ReferenceID>null-00000000</cbc:ReferenceID>
         <cbc:ResponseCode>01</cbc:ResponseCode>
-        <cbc:Description>motivo o sustento x</cbc:Description>
+        <cbc:Description>Fallo en el Monto</cbc:Description>
     </cac:DiscrepancyResponse>
     <cac:BillingReference>
         <cac:InvoiceDocumentReference>
@@ -29,30 +29,30 @@
     <cac:AccountingCustomerParty>
         <cac:Party>
             <cac:PartyIdentification>
-                <cbc:ID>98787665443</cbc:ID>
+                <cbc:ID>24534534592</cbc:ID>
             </cac:PartyIdentification>
             <cac:PartyName>
-                <cbc:Name>xyzRazón Social...</cbc:Name>
+                <cbc:Name>Inflables de Don Pepe</cbc:Name>
             </cac:PartyName>
         </cac:Party>
     </cac:AccountingCustomerParty>
     <cac:LegalMonetaryTotal>
-        <cbc:PayableAmount>3540.00</cbc:PayableAmount>
+        <cbc:PayableAmount>177.00</cbc:PayableAmount>
     </cac:LegalMonetaryTotal>
     <cac:CreditNoteLine>
         <cbc:ID>1</cbc:ID>
-        <cbc:CreditedQuantity unitCode="UND">100</cbc:CreditedQuantity>
-        <cbc:LineExtensionAmount>3000.00</cbc:LineExtensionAmount>
+        <cbc:CreditedQuantity unitCode="UND">10</cbc:CreditedQuantity>
+        <cbc:LineExtensionAmount>150.00</cbc:LineExtensionAmount>
         <cac:PricingReference>
             <cac:AlternativeConditionPrice>
-                <cbc:PriceAmount currencyID="PEN">30.00</cbc:PriceAmount>
+                <cbc:PriceAmount currencyID="PEN">15.00</cbc:PriceAmount>
             </cac:AlternativeConditionPrice>
         </cac:PricingReference>
         <cac:Item>
-            <cbc:Description>Inflables</cbc:Description>
+            <cbc:Description>Se parece a Don Pepe</cbc:Description>
         </cac:Item>
         <cac:Price>
-            <cbc:PriceAmount>30.00</cbc:PriceAmount>
+            <cbc:PriceAmount>15.00</cbc:PriceAmount>
         </cac:Price>
     </cac:CreditNoteLine>
 </CreditNote>

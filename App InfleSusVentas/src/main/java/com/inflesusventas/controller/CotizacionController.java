@@ -71,6 +71,40 @@ public class CotizacionController {
             storageService.guardarCotizaciones(cotizaciones);
         }
     }
+
+    /**
+     * Libera una cotización anulada para permitir facturarla de nuevo.
+     */
+    public void anularCotizacionPorFactura(String numeroFactura) {
+        if (cotizaciones == null || cotizaciones.isEmpty()) {
+            recargarDatos();
+        }
+
+        boolean encontrado = false;
+        for (Cotizacion c : cotizaciones) {
+            // Buscamos la cotización que tenía esa factura vinculada
+            if (c.getIdFacturaGenerada() != null && c.getIdFacturaGenerada().equals(numeroFactura)) {
+                
+                // 1. Marcamos que fue anulada (para historial visual si quieres)
+                c.setAnulada(true); 
+                
+                // 2. IMPORTANTE: La liberamos para poder facturar de nuevo
+                c.setFacturada(false); 
+                
+                // 3. Opcional: Borramos el vínculo con la factura vieja para que no confunda
+                // O puedes guardarlo en un campo "historialFacturas" si quisieras auditoría
+                c.setIdFacturaGenerada(null); 
+                
+                encontrado = true;
+                System.out.println("🔄 Cotización COT-" + c.getNumeroCotizacion() + " liberada (Estado: PENDIENTE).");
+                break;
+            }
+        }
+
+        if (encontrado) {
+            storageService.guardarCotizaciones(cotizaciones);
+        }
+    }
     
     // Getters y Setters básicos
     public Cotizacion getCotizacionActual() {

@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.inflesusventas.model.ComprobanteElectronico;
 import com.inflesusventas.model.Cotizacion;
+import com.inflesusventas.model.NotaCredito;
+
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -19,7 +21,8 @@ public class JsonPersistenceService {
 
     private final String FILE_COTIZACIONES = "data_cotizaciones.json";
     private final String FILE_COMPROBANTES = "data_comprobantes.json";
-    
+     private final String FILE_NOTAS_CREDITO = "data_notas_credito.json";
+
     private ObjectMapper mapper;
 
     public JsonPersistenceService() {
@@ -78,6 +81,27 @@ public class JsonPersistenceService {
         if (!file.exists()) return new ArrayList<>();
         try {
             return mapper.readValue(file, new TypeReference<List<ComprobanteElectronico>>() {});
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    // --- NOTAS DE CRÉDITO ---
+     public void guardarNotasCredito(List<NotaCredito> lista) {
+        try {
+            mapper.writeValue(getArchivo(FILE_NOTAS_CREDITO), lista);
+            System.out.println("💾 Guardadas " + lista.size() + " notas de crédito.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<NotaCredito> cargarNotasCredito() {
+        File file = getArchivo(FILE_NOTAS_CREDITO);
+        if (!file.exists()) return new ArrayList<>();
+        try {
+            return mapper.readValue(file, new TypeReference<List<NotaCredito>>() {});
         } catch (IOException e) {
             e.printStackTrace();
             return new ArrayList<>();

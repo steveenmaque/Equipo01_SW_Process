@@ -1,14 +1,15 @@
 package com.inflesusventas.service;
 
+import com.inflesusventas.controller.CotizacionController; // IMPORTANTE
 import com.inflesusventas.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 /**
  * Servicio de Notas de Crédito
  * Almacenamiento LOCAL (sin BD)
@@ -17,14 +18,16 @@ import java.util.List;
 @Service
 public class NotaCreditoService {
 
-    @Autowired
+   @Autowired
     private XmlGeneratorService xmlGeneratorService;
-
     @Autowired
     private PdfGeneratorService pdfGeneratorService;
-
     @Autowired
     private SunatApiService sunatApiService;
+    @Autowired
+    private JsonPersistenceService jsonService; // Para guardar JSON
+    @Autowired
+    private CotizacionController cotizacionController; // Para actualizar estado
 
     @Value("${empresa.ruc:20554524051}")
     private String rucEmisor;
@@ -35,10 +38,19 @@ public class NotaCreditoService {
     @Value("${serie.nota_credito:FC01}")
     private String serieNotaCredito;
 
-    // Almacenamiento en memoria (sin BD)
     private List<NotaCredito> notasCreditoEnMemoria = new ArrayList<>();
     private int contadorNumero = 0;
 
+    @PostConstruct
+    public void init() {
+        this.notasCreditoEnMemoria = jsonService.cargarNotasCredito();
+        // Calcular el último correlativo para seguir la numeración
+        if (!notasCreditoEnMemoria.isEmpty()) {
+            this.contadorNumero = notasCreditoEnMemoria.get(notasCreditoEnMemoria.size() - 1).getNumero();
+        }
+        System.out.println("✅ Notas de Crédito cargadas: " + notasCreditoEnMemoria.size());
+    }
+    
     /**
      * Genera una Nota de Crédito Electrónica completa
      */
@@ -56,9 +68,7 @@ public class NotaCreditoService {
         System.out.println("🛠 [Service] Serie asignada: " + nc.getSerie() + "-" + nc.getNumero());
 
         // 3. Calcular totales (si no están calculados)
-        if (nc.getSubtotal() == 0) {
-            calcularTotales(nc);
-        }
+        if (nc.getSubtotal() == 0) calcularTotales(nc);
 
         // Generar XML
         System.out.println("� [Service] Generando XML...");
@@ -96,6 +106,11 @@ public class NotaCreditoService {
 
         // Guardar en memoria (o persistir en JSON si se implementara)
         notasCreditoEnMemoria.add(nc);
+        jsonService.guardarNotasCredito(notasCreditoEnMemoria);
+        
+        if (nc.getTipoNotaCredito().toUpperCase().contains("ANULACION")) {
+            cotizacionController.anularCotizacionPorFactura(nc.getNumeroFacturaRef());
+        }
 
         // 8. Mensaje de éxito
         mensaje = String.format(
@@ -180,9 +195,8 @@ public class NotaCreditoService {
      * Obtiene todas las NC almacenadas en memoria
      */
     public List<NotaCredito> obtenerTodasLasNC() {
-        return new ArrayList<>(notasCreditoEnMemoria);
+        return notasCreditoEnMemoria;
     }
-
     /**
      * Busca una NC por serie y número
      */

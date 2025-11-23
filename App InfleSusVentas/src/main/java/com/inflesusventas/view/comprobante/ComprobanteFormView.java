@@ -525,6 +525,17 @@ public class ComprobanteFormView extends JPanel {
         String condicionPago = (cotizacion.getCondicionPago() == null) ? "-" : cotizacion.getCondicionPago().toString();
         
         String estadoFactura;
+    
+        if (cotizacion.isFacturada()) {
+            // Si está facturada, mostramos el check y el ID
+            estadoFactura = "✓ FACTURADA (" + (cotizacion.getIdFacturaGenerada() != null ? cotizacion.getIdFacturaGenerada() : "") + ")";
+        } else if (cotizacion.isAnulada()) {
+            // Si NO está facturada pero TIENE marca de anulada, es una re-emisión
+            estadoFactura = " PENDIENTE (Prev. Anulada)";
+        } else {
+            // Estado normal
+            estadoFactura = "PENDIENTE";
+        }
         
         // USAMOS EL CAMPO PERSISTENTE DEL MODELO
         if (cotizacion.isFacturada()) {
@@ -543,7 +554,7 @@ public class ComprobanteFormView extends JPanel {
         listaProductos.append("</html>");
         
         Object[] fila = new Object[] {
-            estadoFactura, // Columna 0: Estado
+            estadoFactura, // Columna 0
             ruc,
             razonSocial,
             listaProductos.toString(),
@@ -1143,9 +1154,7 @@ public class ComprobanteFormView extends JPanel {
                     
                     // REGISTRAR como facturada usando ÍNDICE
                     String idFacturaGenerado = String.format("%s-%s-%08d",
-                        datosXML.rucCliente,
-                        datosXML.serie,
-                        datosXML.numero);
+                    datosXML.rucCliente, datosXML.serie, datosXML.numero);
                     
                     Cliente clienteFactura = new Cliente();
                     clienteFactura.setId(0); // 0 para que el servicio decida si crea o actualiza (según tu lógica de servicio)
@@ -1158,7 +1167,8 @@ public class ComprobanteFormView extends JPanel {
                     clienteFactura.setNombreContacto("");
                     
                     cotizacion.setFacturada(true);
-                    cotizacionController.actualizarCotizacion(cotizacion);
+                    cotizacion.setIdFacturaGenerada(idFacturaGenerado);
+                    cotizacionController.actualizarCotizacion(cotizacion); 
                     if (clienteService != null) {
                     // Nota: Tu servicio debe ser capaz de buscar por RUC para no duplicar
                     // Si tu servicio guarda ciegamente, podrías tener duplicados.

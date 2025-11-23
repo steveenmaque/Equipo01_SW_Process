@@ -15,6 +15,11 @@ public class Cotizacion {
     private double tipoCambio = 3.85;
     private boolean facturada = false; 
     
+    private String idFacturaGenerada; // Ejemplo: "F001-00000045"
+    private boolean anulada = false; // Nuevo estado
+
+
+
     // --- ENUM CORREGIDO (Con descripciones reales) ---
     public enum CondicionPago {
         CONTADO("Contado contra entrega"),
@@ -58,6 +63,13 @@ public class Cotizacion {
     public void setTipoCambio(double tipoCambio) { this.tipoCambio = tipoCambio; }
     public boolean isFacturada() { return facturada; }
     public void setFacturada(boolean facturada) { this.facturada = facturada; }
+
+    public String getIdFacturaGenerada() { return idFacturaGenerada; }
+    public void setIdFacturaGenerada(String idFacturaGenerada) { this.idFacturaGenerada = idFacturaGenerada; }
+    
+    public boolean isAnulada() { return anulada; }
+    public void setAnulada(boolean anulada) { this.anulada = anulada; }
+    
     // --- MÉTODOS CALCULADOS ---
     public double getSubtotal() {
         if (productos == null) return 0.0;
