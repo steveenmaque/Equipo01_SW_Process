@@ -20,7 +20,13 @@ public class ComprobanteElectronico {
     private double total;
     private String condicionPago; // CONTADO / CREDITO / 50-50
 
-    public ComprobanteElectronico() { }
+    // Campos para Nota de Crédito
+    private String rucEmisor;
+    private String serie;
+    private int numero;
+
+    public ComprobanteElectronico() {
+    }
 
     // getters / setters
     public String getId() {
@@ -109,6 +115,30 @@ public class ComprobanteElectronico {
 
     public void setCondicionPago(String condicionPago) {
         this.condicionPago = condicionPago;
+    }
+
+    public String getRucEmisor() {
+        return rucEmisor;
+    }
+
+    public void setRucEmisor(String rucEmisor) {
+        this.rucEmisor = rucEmisor;
+    }
+
+    public String getSerie() {
+        return serie;
+    }
+
+    public void setSerie(String serie) {
+        this.serie = serie;
+    }
+
+    public int getNumero() {
+        return numero;
+    }
+
+    public void setNumero(int numero) {
+        this.numero = numero;
     }
 
     @Override

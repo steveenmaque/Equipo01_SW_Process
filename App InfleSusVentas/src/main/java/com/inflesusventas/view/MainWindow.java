@@ -7,7 +7,12 @@ import com.inflesusventas.service.ComprobanteService;
 import com.inflesusventas.view.cotizacion.CotizacionFormView;
 import com.inflesusventas.view.comprobante.ComprobanteFormView;
 import com.inflesusventas.view.comprobante.ComprobanteListView;
+import com.inflesusventas.view.comprobante.ComprobanteListView;
 import com.inflesusventas.view.guia.GuiaFormView;
+import com.inflesusventas.view.notacredito.NotaCreditoWizardView;
+import com.inflesusventas.view.notacredito.NotaCreditoListView;
+import com.inflesusventas.controller.NotaCreditoController; // Importar Controller
+import com.inflesusventas.service.NotaCreditoService;
 import org.springframework.context.ApplicationContext;
 
 import javax.swing.*;
@@ -21,7 +26,7 @@ import java.awt.*;
  */
 public class MainWindow extends JFrame {
 
-    private static final Color COLOR_PRIMARIO = new Color(15,65,116);
+    private static final Color COLOR_PRIMARIO = new Color(15, 65, 116);
     private static final Color COLOR_MENU = new Color(230, 130, 70);
 
     private CotizacionController cotizacionController;
@@ -136,6 +141,10 @@ public class MainWindow extends JFrame {
         panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("Guías de Remisión", this::mostrarGuias));
         panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("Notas de Crédito", this::mostrarNotasCredito));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(crearBotonMenu("  → Historial NC", this::mostrarHistorialNC));
+        panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("Reportes", this::mostrarReportes));
         panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("Configuración", this::mostrarConfiguracion));
@@ -168,6 +177,7 @@ public class MainWindow extends JFrame {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btn.setBackground(COLOR_PRIMARIO);
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btn.setBackground(COLOR_MENU);
             }
@@ -199,8 +209,7 @@ public class MainWindow extends JFrame {
         panel.setBackground(new Color(248, 249, 250));
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY),
-                BorderFactory.createEmptyBorder(10, 20, 10, 20)
-        ));
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)));
 
         JLabel lblEstado = new JLabel("✓ Sistema listo | Modo: Desktop | Almacenamiento: Local");
         lblEstado.setFont(new Font("Arial", Font.PLAIN, 11));
@@ -226,11 +235,11 @@ public class MainWindow extends JFrame {
         JLabel lblBienvenida = new JLabel(
                 "<html><center>" +
                         "<h1 style='color: #667eea;'>Bienvenido a InfleSusVentas</h1>" +
-                        "<p style='font-size: 14px;'>Sistema de Gestión de Cotizaciones y Comprobantes Electrónicos</p>" +
+                        "<p style='font-size: 14px;'>Sistema de Gestión de Cotizaciones y Comprobantes Electrónicos</p>"
+                        +
                         "<br><br>" +
                         "<p>Seleccione una opción del menú lateral para comenzar</p>" +
-                        "</center></html>"
-        );
+                        "</center></html>");
         lblBienvenida.setHorizontalAlignment(SwingConstants.CENTER);
 
         panelInicio.add(lblBienvenida, BorderLayout.CENTER);
@@ -250,13 +259,14 @@ public class MainWindow extends JFrame {
     private void mostrarClientes() {
         try {
             panelContenido.removeAll();
-            
-            // Obtenemos el controlador (Spring se encarga de inyectarle el ComprobanteService)
-            com.inflesusventas.controller.ClienteController clienteCtrl = 
-                context.getBean(com.inflesusventas.controller.ClienteController.class);
-            
+
+            // Obtenemos el controlador (Spring se encarga de inyectarle el
+            // ComprobanteService)
+            com.inflesusventas.controller.ClienteController clienteCtrl = context
+                    .getBean(com.inflesusventas.controller.ClienteController.class);
+
             panelContenido.add(clienteCtrl.getView());
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -268,38 +278,38 @@ public class MainWindow extends JFrame {
         mostrarEnConstruccion("Módulo de Ventas");
     }
 
-        private void mostrarComprobantes() {
-            panelContenido.removeAll();
-            
-            try {
-                // 1. Obtener los servicios necesarios
-                ClienteService clienteService = context.getBean(ClienteService.class);
-                ComprobanteService compService = context.getBean(ComprobanteService.class);
-                
-                // 2. Crear la vista NUEVA (esto fuerza la recarga de datos)
-                ComprobanteFormView vistaComprobantes = new ComprobanteFormView(
-                    cotizacionController, 
-                    clienteService, 
-                    compService
-                );
-                
-                // 3. IMPORTANTE: Forzar la lectura de datos explícitamente
-                vistaComprobantes.cargarProductosDesdeCotizacion();
-                
-                panelContenido.add(vistaComprobantes);
-                System.out.println("✓ Vista de comprobantes actualizada");
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Error al cargar comprobantes: " + e.getMessage());
-            }
-            
-            panelContenido.revalidate();
-            panelContenido.repaint();
+    private void mostrarComprobantes() {
+        panelContenido.removeAll();
+
+        try {
+            // 1. Obtener los servicios necesarios
+            ClienteService clienteService = context.getBean(ClienteService.class);
+            ComprobanteService compService = context.getBean(ComprobanteService.class);
+
+            // 2. Crear la vista NUEVA (esto fuerza la recarga de datos)
+            ComprobanteFormView vistaComprobantes = new ComprobanteFormView(
+                    cotizacionController,
+                    clienteService,
+                    compService);
+
+            // 3. IMPORTANTE: Forzar la lectura de datos explícitamente
+            vistaComprobantes.cargarProductosDesdeCotizacion();
+
+            panelContenido.add(vistaComprobantes);
+            System.out.println("✓ Vista de comprobantes actualizada");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al cargar comprobantes: " + e.getMessage());
         }
-            // MODIFICADO: Método para mostrar Guías de Remisión
-            private void mostrarGuias() {
-                panelContenido.removeAll();
+
+        panelContenido.revalidate();
+        panelContenido.repaint();
+    }
+
+    // MODIFICADO: Método para mostrar Guías de Remisión
+    private void mostrarGuias() {
+        panelContenido.removeAll();
 
         try {
             // Obtener el controlador de guías desde Spring
@@ -323,15 +333,57 @@ public class MainWindow extends JFrame {
 
         panelContenido.revalidate();
         panelContenido.repaint();
-        }
+        panelContenido.revalidate();
+        panelContenido.repaint();
+    }
 
-            private void mostrarHistorialComprobantes() {
-            panelContenido.removeAll();
-            ComprobanteService compService = context.getBean(ComprobanteService.class);
-            panelContenido.add(new ComprobanteListView(compService));
-            panelContenido.revalidate();
-            panelContenido.repaint();
+    private void mostrarNotasCredito() {
+        System.out.println("👉 Intentando abrir módulo Notas de Crédito...");
+        panelContenido.removeAll();
+        try {
+            NotaCreditoController ncController = context.getBean(NotaCreditoController.class);
+            if (ncController == null) {
+                System.err.println("❌ Error: NotaCreditoController es NULL");
+                JOptionPane.showMessageDialog(this, "Error interno: Controlador no encontrado.");
+                return;
             }
+            System.out.println("✓ Controlador obtenido: " + ncController);
+
+            NotaCreditoWizardView view = new NotaCreditoWizardView(ncController);
+            panelContenido.add(view, BorderLayout.CENTER); // Especificar CENTER explícitamente
+            System.out.println("✓ Vista agregada al panel");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("❌ Excepción al abrir módulo NC: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error cargando módulo NC: " + e.getMessage());
+        }
+        panelContenido.revalidate();
+        panelContenido.repaint();
+        System.out.println("✓ Panel repintado");
+    }
+
+    private void mostrarHistorialComprobantes() {
+        panelContenido.removeAll();
+        ComprobanteService compService = context.getBean(ComprobanteService.class);
+        panelContenido.add(new ComprobanteListView(compService));
+        panelContenido.revalidate();
+        panelContenido.repaint();
+    }
+
+    private void mostrarHistorialNC() {
+        panelContenido.removeAll();
+        try {
+            NotaCreditoService ncService = context.getBean(NotaCreditoService.class);
+            panelContenido.add(new NotaCreditoListView(ncService));
+            System.out.println("✓ Historial de Notas de Crédito cargado");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error cargando historial NC: " + e.getMessage());
+        }
+        panelContenido.revalidate();
+        panelContenido.repaint();
+    }
 
     private void mostrarReportes() {
         mostrarEnConstruccion("Módulo de Reportes");
@@ -351,8 +403,7 @@ public class MainWindow extends JFrame {
                 "<html><center>" +
                         "<h2 style='color: #667eea;'>🚧 " + modulo + "</h2>" +
                         "<p>Este módulo está en construcción</p>" +
-                        "</center></html>"
-        );
+                        "</center></html>");
         lbl.setHorizontalAlignment(SwingConstants.CENTER);
 
         panel.add(lbl, BorderLayout.CENTER);
@@ -368,8 +419,7 @@ public class MainWindow extends JFrame {
                 "¿Está seguro que desea salir de la aplicación?",
                 "Confirmar Salida",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
+                JOptionPane.QUESTION_MESSAGE);
 
         if (opcion == JOptionPane.YES_OPTION) {
             System.out.println("===========================================");
