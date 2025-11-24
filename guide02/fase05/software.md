@@ -21,6 +21,7 @@ Para asegurar la integridad del código fuente y facilitar el trabajo en equipo,
 
 * **Git:** Utilizado como herramienta de control de versiones local, permitiendo el seguimiento detallado de cambios, creación de ramas (branches) y gestión del historial de modificaciones en el código fuente.
 * **GitHub:** Plataforma de alojamiento remoto utilizada para centralizar el repositorio del proyecto. Facilitó la integración del trabajo del equipo y sirvió como respaldo de seguridad (backup) de todo el ciclo de desarrollo.
+* **VS Code** Utilizado para el trabajo colaborativo con su extension a cuentas de github y modificando cada archivo de manera sencilla.
 
 ### 3. Herramientas de Análisis y Diseño (CASE)
 
