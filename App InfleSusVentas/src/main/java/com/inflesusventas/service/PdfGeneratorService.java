@@ -62,129 +62,134 @@ public class PdfGeneratorService {
         cargarConfiguracion();
     }
 
-    /**
-     * Crea los directorios necesarios para PDFs
-     */
     private void crearDirectorios() {
         try {
+            // 1. Directorio principal para Cotizaciones (definido en la constante)
             Files.createDirectories(Paths.get(DIRECTORIO_PDF));
+            
+            // 2. Directorio para Notas de Crédito
+            Files.createDirectories(Paths.get("documentos/pdf/notas_credito/"));
+
+            // 3. Directorio para Facturas (por seguridad, para futuras facturas)
+            Files.createDirectories(Paths.get("documentos/pdf/facturas/"));
+            
+            // 4. Directorio de recursos (donde debe estar tu logo)
             Files.createDirectories(Paths.get("src/main/resources/images"));
-            System.out.println("✓ Directorios PDF creados");
+            
+            System.out.println("✓ Directorios de almacenamiento PDF verificados y creados correctamente.");
         } catch (IOException e) {
-            System.err.println("✗ Error al crear directorios PDF: " + e.getMessage());
+            System.err.println("✗ Error crítico al crear los directorios: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    /**
-     * Carga configuración de la empresa desde properties
-     */
     private void cargarConfiguracion() {
         configuracion = new Properties();
         try {
             File configFile = new File(CONFIG_FILE);
             if (configFile.exists()) {
+                // Carga los datos reales del archivo empresa.properties
                 configuracion.load(new FileInputStream(configFile));
-                System.out.println("✓ Configuración de empresa cargada");
+                System.out.println("✓ Configuración de empresa cargada correctamente desde: " + CONFIG_FILE);
             } else {
-                // Valores por defecto
-                configuracion.setProperty("empresa.ruc", "20123456789");
-                configuracion.setProperty("empresa.razon_social", "InfleSusVentas SRL");
-                configuracion.setProperty("empresa.direccion", "Av. Ejemplo 123, Lima, Perú");
-                configuracion.setProperty("empresa.telefono", "01-1234567");
-                configuracion.setProperty("empresa.email", "ventas@inflesusventas.com");
-                System.out.println("⚠ Usando configuración por defecto");
+                // Valores de respaldo por si se borra el archivo accidentalmente
+                configuracion.setProperty("empresa.ruc", "20554542051");
+                configuracion.setProperty("empresa.razon_social", "INFLE SUS VENTAS SRL");
+                configuracion.setProperty("empresa.direccion", "Calle San Francisco Mz 1-4 Lt 13A CP. Zapallal Alto");
+                System.out.println("⚠ ADVERTENCIA: No se encontró empresa.properties. Usando configuración básica por defecto.");
             }
         } catch (IOException e) {
-            System.err.println("✗ Error al cargar configuración: " + e.getMessage());
+            System.err.println("✗ Error crítico al cargar configuración: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     /**
-     * Genera PDF profesional de cotización con diseño corporativo
+     * Genera PDF de Cotización con el diseño específico solicitado (Estilo "Globo")
      */
     public String generarPdfCotizacion(Cotizacion cotizacion) throws Exception {
+        // Definir nombre del archivo: COT-0001_20251123.pdf
         String nombreArchivo = String.format("COT-%04d_%s.pdf",
                 cotizacion.getNumeroCotizacion(),
                 cotizacion.getFecha().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
         String rutaCompleta = DIRECTORIO_PDF + nombreArchivo;
 
+        // Inicializar el escritor PDF
         PdfWriter writer = new PdfWriter(rutaCompleta);
         PdfDocument pdfDoc = new PdfDocument(writer);
         Document document = new Document(pdfDoc, PageSize.A4);
+        document.setMargins(30, 30, 30, 30); // Márgenes estándar
 
-        // Márgenes ajustados para aprovechar espacio
-        document.setMargins(30, 30, 30, 30);
-
-        // 1. ENCABEZADO
-        agregarEncabezadoConLogo(document, cotizacion);
+        // 1. ENCABEZADO COMÚN (Logo y datos de InfleSusVentas)
+        agregarEncabezadoConLogo(document); 
         agregarLineaSeparadora(document, colorPrimario);
 
-        // 2. DATOS
-        agregarInformacionCotizacion(document, cotizacion);
-        agregarDatosCliente(document, cotizacion);
+        // 2. CABECERA ESPECÍFICA (Aquí está el cambio clave: Cliente + Bancos arriba)
+        agregarCabeceraDatosCotizacion(document, cotizacion);
 
-        // 3. PRODUCTOS (Con descripción larga ajustada)
-        agregarTablaProductos(document, cotizacion);
+        // 3. TABLA DE PRODUCTOS (Con los títulos exactos de tu PDF: "UNID. DE MEDIDA", etc.)
+        agregarTablaProductosCotizacion(document, cotizacion);
 
-        // 4. MONTOS Y BANCOS (Lado a lado o secuencial)
-        // Primero el resumen de dinero a la derecha
+        // 4. TOTALES (El cuadro de resumen de montos alineado a la derecha)
         agregarResumenMontos(document, cotizacion);
 
-        // Luego la tabla de bancos (Clave para tu diseño)
-        agregarDatosBancarios(document);
+        // 5. PIE LEGAL (Condiciones, Garantía y Notas Técnicas al final)
+        agregarCondicionesLegalesCotizacion(document, cotizacion);
 
-        // 5. PIE DE PÁGINA (Condiciones y Garantía)
-        agregarCondicionesLegales(document, cotizacion);
-
+        // Cerrar y guardar
         document.close();
-
-        System.out.println("✓ PDF generado: " + nombreArchivo);
+        System.out.println("✓ PDF Cotización generado correctamente: " + nombreArchivo);
         return rutaCompleta;
     }
 
     /**
      * Agrega encabezado con logo de la empresa
      */
-    private void agregarEncabezadoConLogo(Document document, Cotizacion cotizacion) {
+    /**
+     * ENCABEZADO UNIFICADO: Lee los datos de empresa.properties.
+     * Se usa para todos los documentos (Cotización, Factura, Nota de Crédito).
+     */
+    private void agregarEncabezadoConLogo(Document document) {
         try {
+            // Tabla de 2 columnas: Logo (2 partes) y Texto (3 partes)
             Table headerTable = new Table(UnitValue.createPercentArray(new float[] { 2, 3 }));
             headerTable.setWidth(UnitValue.createPercentValue(100));
 
-            // Logo (lado izquierdo)
+            // 1. LOGO (Columna Izquierda)
             Cell logoCell = new Cell();
             File logoFile = new File(LOGO_PATH);
             if (logoFile.exists()) {
                 Image logo = new Image(ImageDataFactory.create(LOGO_PATH));
-                logo.setWidth(120);
-                logo.setHeight(60);
+                // Ajuste dinámico del logo para que no rompa el header
+                logo.setAutoScale(true); 
+                logo.setMaxHeight(60); 
                 logoCell.add(logo);
             } else {
-                // Si no hay logo, mostrar nombre de la empresa
-                Paragraph nombreEmpresa = new Paragraph(
-                        configuracion.getProperty("empresa.razon_social", "InfleSusVentas SRL"))
-                        .setFontSize(18)
-                        .setBold()
-                        .setFontColor(colorPrimario);
+                // Texto de respaldo si no hay imagen
+                Paragraph nombreEmpresa = new Paragraph(configuracion.getProperty("empresa.razon_social"))
+                        .setFontSize(18).setBold().setFontColor(colorPrimario);
                 logoCell.add(nombreEmpresa);
             }
             logoCell.setBorder(Border.NO_BORDER);
             logoCell.setVerticalAlignment(VerticalAlignment.MIDDLE);
 
-            // Información de la empresa (lado derecho)
+            // 2. INFO EMPRESA (Columna Derecha)
             Cell infoCell = new Cell();
-            infoCell.add(new Paragraph(configuracion.getProperty("empresa.razon_social", "InfleSusVentas SRL"))
-                    .setFontSize(14)
-                    .setBold()
-                    .setFontColor(colorPrimario));
-            infoCell.add(new Paragraph("RUC: " + configuracion.getProperty("empresa.ruc", "20123456789"))
-                    .setFontSize(10));
+            // Nombre Comercial o Razón Social destacado
+            infoCell.add(new Paragraph(configuracion.getProperty("empresa.razon_social"))
+                    .setFontSize(14).setBold().setFontColor(colorPrimario));
+            
+            // RUC y Datos de contacto
+            infoCell.add(new Paragraph("RUC: " + configuracion.getProperty("empresa.ruc"))
+                    .setFontSize(10).setBold());
             infoCell.add(new Paragraph(configuracion.getProperty("empresa.direccion", ""))
                     .setFontSize(9));
             infoCell.add(new Paragraph("Teléfono: " + configuracion.getProperty("empresa.telefono", ""))
                     .setFontSize(9));
             infoCell.add(new Paragraph("Email: " + configuracion.getProperty("empresa.email", ""))
                     .setFontSize(9));
+            
             infoCell.setBorder(Border.NO_BORDER);
             infoCell.setTextAlignment(TextAlignment.RIGHT);
             infoCell.setVerticalAlignment(VerticalAlignment.MIDDLE);
@@ -193,119 +198,195 @@ public class PdfGeneratorService {
             headerTable.addCell(infoCell);
 
             document.add(headerTable);
-            document.add(new Paragraph("\n"));
-
         } catch (Exception e) {
             System.err.println("✗ Error al agregar encabezado: " + e.getMessage());
         }
     }
 
-    /**
-     * Agrega línea separadora decorativa
-     */
-
     private void agregarLineaSeparadora(Document document, Color color) {
-        SolidLine linea = new SolidLine(1f); // 1f es el grosor de la línea
+        // Crear una línea sólida de 1 punto de grosor
+        SolidLine linea = new SolidLine(1f);
         linea.setColor(color);
+        
+        // Crear el elemento separador basado en esa línea
         LineSeparator ls = new LineSeparator(linea);
-        ls.setMarginTop(5); // Opcional: un poco de espacio arriba
-        ls.setMarginBottom(5); // Opcional: un poco de espacio abajo
-
+        
+        // Darle un poco de aire arriba y abajo para que no quede pegado al texto
+        ls.setMarginTop(5);
+        ls.setMarginBottom(5);
+        
         document.add(ls);
     }
 
-    /**
-     * Agrega información general de la cotización
-     */
-    private void agregarInformacionCotizacion(Document document, Cotizacion cotizacion) {
-        // Título centrado
-        Paragraph titulo = new Paragraph("COTIZACIÓN DE VENTA")
-                .setFontSize(20)
-                .setBold()
-                .setFontColor(colorPrimario)
-                .setTextAlignment(TextAlignment.CENTER);
-        document.add(titulo);
+    private void agregarCondicionesLegalesCotizacion(Document document, Cotizacion cotizacion) {
+        // Contenedor simple sin bordes
+        Table condiciones = new Table(1);
+        condiciones.setWidth(UnitValue.createPercentValue(100));
+        condiciones.setMarginTop(10); // Separación de los totales
 
-        // Número y fecha
-        Table infoTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        infoTable.setWidth(UnitValue.createPercentValue(100));
+        Cell celda = new Cell();
+        celda.setBorder(Border.NO_BORDER);
+        float fontSize = 9f;
 
-        Cell nroCell = new Cell();
-        nroCell.add(new Paragraph("Nº Cotización:")
-                .setBold()
-                .setFontSize(11));
-        nroCell.add(new Paragraph(String.format("COT-%04d", cotizacion.getNumeroCotizacion()))
-                .setFontSize(14)
-                .setBold()
-                .setFontColor(colorSecundario));
-        nroCell.setBackgroundColor(colorGrisClaro);
-        nroCell.setTextAlignment(TextAlignment.CENTER);
-        nroCell.setPadding(10);
+        // 1. Datos básicos (Pago, Tiempo, IGV)
+        celda.add(new Paragraph("Condición de pago: " + cotizacion.getCondicionPago().getDescripcion())
+                .setFontSize(fontSize).setBold());
+        
+        celda.add(new Paragraph("Tiempo de entrega: " + configuracion.getProperty("condicion.tiempo_entrega_defecto", "5 a 7 días"))
+                .setFontSize(fontSize));
+        
+        celda.add(new Paragraph("Incluye IGV 18%: SI").setFontSize(fontSize));
 
-        Cell fechaCell = new Cell();
-        fechaCell.add(new Paragraph("Fecha de Emisión:")
-                .setBold()
-                .setFontSize(11));
-        fechaCell.add(new Paragraph(cotizacion.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-                .setFontSize(14)
-                .setBold());
-        fechaCell.setBackgroundColor(colorGrisClaro);
-        fechaCell.setTextAlignment(TextAlignment.CENTER);
-        fechaCell.setPadding(10);
+        // 2. Incluye (traído de properties)
+        String incluye = configuracion.getProperty("condicion.incluye", "");
+        if (!incluye.isEmpty()) {
+            celda.add(new Paragraph("Incluye: " + incluye).setFontSize(fontSize).setMarginTop(4));
+        }
 
-        infoTable.addCell(nroCell);
-        infoTable.addCell(fechaCell);
+        // 3. Marca y Procedencia
+        celda.add(new Paragraph("Marca y procedencia: Producto Nacional de " + configuracion.getProperty("empresa.razon_social"))
+                .setFontSize(fontSize));
 
-        document.add(infoTable);
-        document.add(new Paragraph("\n"));
+        // 4. Garantía (traído de properties)
+        String garantia = configuracion.getProperty("condicion.garantia", "");
+        if (!garantia.isEmpty()) {
+            celda.add(new Paragraph("Garantía: " + garantia).setFontSize(fontSize));
+        }
+
+        // 5. Notas Técnicas (Motor y Artes)
+        celda.add(new Paragraph("\n NOTAS TÉCNICAS:").setBold().setFontSize(fontSize));
+        
+        // Verificamos que existan las propiedades antes de agregarlas
+        String notaMotor = configuracion.getProperty("texto.nota.motor", "");
+        if (!notaMotor.isEmpty()) celda.add(new Paragraph("- " + notaMotor).setFontSize(fontSize));
+        
+        String notaElectrica = configuracion.getProperty("texto.requisito.electrico", "");
+        if (!notaElectrica.isEmpty()) celda.add(new Paragraph("- " + notaElectrica).setFontSize(fontSize));
+        
+        String notaArte = configuracion.getProperty("texto.requisito.arte", "");
+        if (!notaArte.isEmpty()) celda.add(new Paragraph("- " + notaArte).setFontSize(fontSize));
+
+        condiciones.addCell(celda);
+        document.add(condiciones);
+        
+        // 6. Firma final (Atentamente...)
+        document.add(new Paragraph("\n\nAtentamente,\n\nArea de Ventas\n" + configuracion.getProperty("empresa.razon_social"))
+                .setTextAlignment(TextAlignment.CENTER).setFontSize(10).setBold());
+    }
+   
+    private void agregarCabeceraDatosCotizacion(Document document, Cotizacion cotizacion) {
+        // 1. ASUNTO
+        document.add(new Paragraph("Asunto: Cotización de Inflable Publicitario")
+                .setBold().setFontSize(11).setUnderline().setMarginBottom(10));
+
+        // 2. TABLA DE DATOS (Cliente + Fecha + Número)
+        Table tableDatos = new Table(UnitValue.createPercentArray(new float[]{1, 4}));
+        tableDatos.setWidth(UnitValue.createPercentValue(100));
+
+        // Datos del Cliente
+        agregarFilaDatoCotizacion(tableDatos, "Cliente:", cotizacion.getCliente().getRazonSocial());
+        agregarFilaDatoCotizacion(tableDatos, "N.º RUC:", cotizacion.getCliente().getRuc());
+        agregarFilaDatoCotizacion(tableDatos, "Atención:", cotizacion.getCliente().getNombreContacto() != null ? cotizacion.getCliente().getNombreContacto() : "-");
+        
+        String telefono = cotizacion.getCliente().getTelefono() != null ? cotizacion.getCliente().getTelefono() : "-";
+        agregarFilaDatoCotizacion(tableDatos, "Teléfono:", telefono);
+
+        // Agregamos Fecha y Número aquí mismo para mantener el orden del documento
+        agregarFilaDatoCotizacion(tableDatos, "Fecha:", cotizacion.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        agregarFilaDatoCotizacion(tableDatos, "Nº Cotización:", String.format("COT-%04d", cotizacion.getNumeroCotizacion()));
+        
+        document.add(tableDatos);
+
+        // 3. CUENTA BBVA (Texto suelto debajo de los datos)
+        String cuentaBBVA = configuracion.getProperty("banco.bbva.nombre", "Banco BBVA") + ": " + 
+                            configuracion.getProperty("banco.bbva.cuenta", "");
+        document.add(new Paragraph(cuentaBBVA).setFontSize(10).setBold().setMarginTop(8));
+        
+        // 4. TABLA DE DETRACCIÓN Y VALIDEZ (3 columnas con encabezado gris)
+        Table tableBancos = new Table(UnitValue.createPercentArray(new float[]{1.5f, 1, 1}));
+        tableBancos.setWidth(UnitValue.createPercentValue(100));
+        tableBancos.setMarginTop(5);
+        tableBancos.setMarginBottom(15);
+        
+        Color grisClaro = new DeviceRgb(240, 240, 240);
+        
+        // Encabezados
+        tableBancos.addHeaderCell(new Cell().add(new Paragraph("Cuenta de detracción Banco de la Nación").setBold().setFontSize(8)).setBackgroundColor(grisClaro));
+        tableBancos.addHeaderCell(new Cell().add(new Paragraph("Validez de la cotización").setBold().setFontSize(8)).setBackgroundColor(grisClaro));
+        tableBancos.addHeaderCell(new Cell().add(new Paragraph("CCI").setBold().setFontSize(8)).setBackgroundColor(grisClaro));
+
+        // Valores (desde properties)
+        tableBancos.addCell(new Cell().add(new Paragraph(configuracion.getProperty("banco.nacion.cuenta", "-"))).setFontSize(9));
+        tableBancos.addCell(new Cell().add(new Paragraph(configuracion.getProperty("condicion.validez_oferta", "30 días"))).setFontSize(9));
+        tableBancos.addCell(new Cell().add(new Paragraph(configuracion.getProperty("banco.bbva.cci", "-"))).setFontSize(9));
+
+        document.add(tableBancos);
+    }
+
+        private void agregarFilaDatoCotizacion(Table table, String label, String valor) {
+        // Celda Etiqueta (Negrita, sin fondo, padding ajustado)
+        Cell celdaLabel = new Cell();
+        celdaLabel.add(new Paragraph(label).setBold().setFontSize(10));
+        celdaLabel.setBorder(Border.NO_BORDER);
+        celdaLabel.setPadding(1); // Padding reducido para que quede compacto
+        
+        // Celda Valor (Texto normal)
+        Cell celdaValor = new Cell();
+        celdaValor.add(new Paragraph(valor).setFontSize(10));
+        celdaValor.setBorder(Border.NO_BORDER);
+        celdaValor.setPadding(1);
+
+        table.addCell(celdaLabel);
+        table.addCell(celdaValor);
     }
 
     /**
-     * Agrega datos del cliente
+     * Tabla de productos exclusiva para Cotización (Estilo "Globo")
      */
-    private void agregarDatosCliente(Document document, Cotizacion cotizacion) {
-        Paragraph tituloCliente = new Paragraph("DATOS DEL CLIENTE")
-                .setFontSize(12)
-                .setBold()
-                .setFontColor(colorPrimario);
-        document.add(tituloCliente);
+    private void agregarTablaProductosCotizacion(Document document, Cotizacion cotizacion) {
+        // Definimos anchos de columna: La descripción (índice 3) es la más ancha
+        float[] columnWidths = { 0.5f, 0.8f, 1.5f, 5, 1.5f, 1.5f };
+        Table productosTable = new Table(UnitValue.createPercentArray(columnWidths));
+        productosTable.setWidth(UnitValue.createPercentValue(100));
 
-        Table clienteTable = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
-        clienteTable.setWidth(UnitValue.createPercentValue(100));
-
-        agregarFilaCliente(clienteTable, "RUC:", cotizacion.getCliente().getRuc());
-        agregarFilaCliente(clienteTable, "Razón Social:", cotizacion.getCliente().getRazonSocial());
-
-        if (cotizacion.getCliente().getNombreContacto() != null) {
-            agregarFilaCliente(clienteTable, "Contacto:", cotizacion.getCliente().getNombreContacto());
-        }
-        if (cotizacion.getCliente().getTelefono() != null) {
-            agregarFilaCliente(clienteTable, "Teléfono:", cotizacion.getCliente().getTelefono());
-        }
-        if (cotizacion.getCliente().getEmail() != null) {
-            agregarFilaCliente(clienteTable, "Email:", cotizacion.getCliente().getEmail());
+        // 1. ENCABEZADOS (Texto Blanco sobre Fondo Azul Corporativo)
+        String[] headers = { "N.", "CANT.", "UNID. DE MEDIDA", "DESCRIPCIÓN", "PRECIO UNITARIO", "TOTAL" };
+        
+        for (String header : headers) {
+            Cell cell = new Cell().add(new Paragraph(header).setBold().setFontSize(7).setFontColor(ColorConstants.WHITE));
+            cell.setBackgroundColor(colorPrimario); 
+            cell.setTextAlignment(TextAlignment.CENTER);
+            cell.setVerticalAlignment(VerticalAlignment.MIDDLE);
+            cell.setPadding(4); // Un poco de aire en el encabezado
+            productosTable.addHeaderCell(cell);
         }
 
-        document.add(clienteTable);
-        document.add(new Paragraph("\n"));
-    }
+        // 2. LLENADO DE DATOS
+        int item = 1;
+        for (ProductoCotizacion producto : cotizacion.getProductos()) {
+            // N.
+            productosTable.addCell(crearCeldaCuerpo(String.valueOf(item++), TextAlignment.CENTER));
+            
+            // CANT.
+            productosTable.addCell(crearCeldaCuerpo(String.valueOf(producto.getCantidad()), TextAlignment.CENTER));
+            
+            // UNID. (Usamos "UNIDAD" fijo o lo que venga del objeto si prefieres)
+            String unidad = (producto.getUnidadMedida() != null && !producto.getUnidadMedida().isEmpty()) 
+                            ? producto.getUnidadMedida() : "UNIDAD";
+            productosTable.addCell(crearCeldaCuerpo(unidad, TextAlignment.CENTER)); 
+            
+            // DESCRIPCIÓN (Alineada a la izquierda)
+            productosTable.addCell(crearCeldaCuerpo(producto.getDescripcion(), TextAlignment.LEFT));
 
-    private void agregarFilaCliente(Table table, String label, Object valor) {
-        Cell labelCell = new Cell();
-        labelCell.add(new Paragraph(label).setBold());
-        labelCell.setBackgroundColor(colorGrisClaro);
-        labelCell.setBorder(Border.NO_BORDER); // Opcional: se ve mejor sin bordes internos
-        labelCell.setPadding(5); // Un poco menos de padding queda mejor
+            // PRECIO UNITARIO (Alineado a la derecha)
+            productosTable.addCell(crearCeldaCuerpo(String.format("S/ %.2f", producto.getPrecioBase()), TextAlignment.RIGHT));
+            
+            // TOTAL (Alineado a la derecha)
+            productosTable.addCell(crearCeldaCuerpo(String.format("S/ %.2f", producto.getSubtotal()), TextAlignment.RIGHT));
+        }
 
-        Cell valorCell = new Cell();
-        // CORRECCIÓN AQUÍ: Convertimos el objeto a String de forma segura
-        String textoValor = (valor != null) ? valor.toString() : "-";
-        valorCell.add(new Paragraph(textoValor));
-        valorCell.setBorder(Border.NO_BORDER);
-        valorCell.setPadding(5);
-
-        table.addCell(labelCell);
-        table.addCell(valorCell);
+        document.add(productosTable);
+        document.add(new Paragraph("\n")); // Espacio después de la tabla
     }
 
     /**
@@ -383,109 +464,137 @@ public class PdfGeneratorService {
     }
 
     private void agregarCondicionesLegales(Document document, Cotizacion cotizacion) {
-        // Contenedor visual (Cuadro gris claro)
-        Table condicionesTable = new Table(1);
-        condicionesTable.setWidth(UnitValue.createPercentValue(100));
+        // Contenedor simple sin bordes (ancho 100%)
+        Table condiciones = new Table(1);
+        condiciones.setWidth(UnitValue.createPercentValue(100));
+        condiciones.setMarginTop(10);
 
-        Cell cell = new Cell();
-        cell.setBackgroundColor(new DeviceRgb(250, 250, 250)); // Gris muy suave
-        cell.setBorder(Border.NO_BORDER);
-        cell.setPadding(10);
+        Cell celda = new Cell();
+        celda.setBorder(Border.NO_BORDER);
+        float fontSize = 9f;
 
-        // 1. Validez y Tiempos (Negrita)
-        cell.add(new Paragraph("CONDICIONES COMERCIALES:")
-                .setBold().setFontSize(9).setFontColor(colorPrimario));
+        // 1. Condiciones Comerciales Básicas
+        celda.add(new Paragraph("Condición de pago: " + cotizacion.getCondicionPago().getDescripcion())
+                .setFontSize(fontSize).setBold());
+        celda.add(new Paragraph("Tiempo de entrega: " + configuracion.getProperty("condicion.tiempo_entrega_defecto", "5 a 7 días"))
+                .setFontSize(fontSize));
+        celda.add(new Paragraph("Incluye IGV 18%: SI").setFontSize(fontSize));
 
-        cell.add(new Paragraph(
-                "• Validez de la oferta: " + configuracion.getProperty("condicion.validez_oferta", "30 días"))
-                .setFontSize(8));
-        cell.add(new Paragraph(
-                "• Tiempo de entrega: " + configuracion.getProperty("condicion.tiempo_entrega_defecto", "5-7 días"))
-                .setFontSize(8));
+        // 2. Qué incluye (desde properties)
+        String incluye = configuracion.getProperty("condicion.incluye", "");
+        if (!incluye.isEmpty()) {
+            celda.add(new Paragraph("Incluye: " + incluye)
+                    .setFontSize(fontSize).setMarginTop(4));
+        }
 
-        // 2. Garantía (Itálica)
-        cell.add(new Paragraph("\n" + configuracion.getProperty("texto.garantia", ""))
-                .setFontSize(8).setItalic());
+        // 3. Marca y Procedencia
+        celda.add(new Paragraph("Marca y procedencia: Producto Nacional de " + configuracion.getProperty("empresa.razon_social"))
+                .setFontSize(fontSize));
 
-        // 3. Requisitos Técnicos
-        cell.add(new Paragraph("NOTAS IMPORTANTES:")
-                .setBold().setFontSize(9).setMarginTop(5));
+        // 4. Garantía
+        String garantia = configuracion.getProperty("condicion.garantia", "");
+        if (!garantia.isEmpty()) {
+            celda.add(new Paragraph("Garantía: " + garantia).setFontSize(fontSize));
+        }
 
-        cell.add(new Paragraph("- " + configuracion.getProperty("texto.requisito.electrico", ""))
-                .setFontSize(8));
-        cell.add(new Paragraph("- " + configuracion.getProperty("texto.requisito.arte", ""))
-                .setFontSize(8));
-        cell.add(new Paragraph("- " + configuracion.getProperty("texto.nota.motor", ""))
-                .setFontSize(8));
+        // 5. Notas Técnicas (Motor, Eléctrico, Artes)
+        celda.add(new Paragraph("\nNOTAS TÉCNICAS:").setBold().setFontSize(fontSize));
+        celda.add(new Paragraph("- " + configuracion.getProperty("texto.nota.motor", ""))
+                .setFontSize(fontSize));
+        celda.add(new Paragraph("- " + configuracion.getProperty("texto.requisito.electrico", ""))
+                .setFontSize(fontSize));
+        celda.add(new Paragraph("- " + configuracion.getProperty("texto.requisito.arte", ""))
+                .setFontSize(fontSize));
 
-        condicionesTable.addCell(cell);
-        document.add(condicionesTable);
-
-        // Firma y cierre final
-        document.add(new Paragraph("\n\n" + configuracion.getProperty("empresa.representante", "Ventas"))
-                .setTextAlignment(TextAlignment.CENTER).setBold());
-        document.add(new Paragraph("Departamento de Ventas - " + configuracion.getProperty("empresa.nombre_comercial"))
-                .setTextAlignment(TextAlignment.CENTER).setFontSize(8));
+        condiciones.addCell(celda);
+        document.add(condiciones);
+        
+        // 6. Firma / Cierre "Atentamente"
+        document.add(new Paragraph("\n\nAtentamente,\n\nArea de Ventas\n" + configuracion.getProperty("empresa.razon_social"))
+                .setTextAlignment(TextAlignment.CENTER).setFontSize(10).setBold());
     }
 
-    // Helper mejorado para celdas
+    // Helper para crear celdas de la tabla de productos rápidamente
     private Cell crearCeldaCuerpo(String texto, TextAlignment alineacion) {
         return new Cell()
-                .add(new Paragraph(texto).setFontSize(9)) // Fuente un poco más chica
+                .add(new Paragraph(texto).setFontSize(8)) // Fuente pequeña para que quepa todo
                 .setTextAlignment(alineacion)
-                .setPadding(4)
-                .setVerticalAlignment(VerticalAlignment.TOP); // Clave para descripciones largas
+                .setPadding(3)
+                .setVerticalAlignment(VerticalAlignment.TOP);
     }
 
-    private Cell crearCeldaProducto(String texto, TextAlignment alignment) {
+        private Cell crearCeldaProducto(String texto, TextAlignment alineacion) {
         Cell cell = new Cell();
-        cell.add(new Paragraph(texto));
-        cell.setTextAlignment(alignment);
-        cell.setPadding(8);
+        // Usamos una fuente tamaño 9 para que la información quepa bien
+        cell.add(new Paragraph(texto != null ? texto : "").setFontSize(9));
+        cell.setTextAlignment(alineacion);
+        cell.setVerticalAlignment(VerticalAlignment.MIDDLE);
+        cell.setPadding(4); // Un poco de espacio interno para que no se vea apretado
         return cell;
     }
-
     /**
      * Agrega resumen de montos
      */
+    /**
+     * Agrega el cuadro de totales (Subtotal, IGV, Total) alineado a la derecha.
+     */
     private void agregarResumenMontos(Document document, Cotizacion cotizacion) {
+        // Tabla de 2 columnas (Etiqueta y Valor)
+        // Ancho 50% del documento, alineada a la DERECHA
         Table resumenTable = new Table(UnitValue.createPercentArray(new float[] { 3, 1 }));
         resumenTable.setWidth(UnitValue.createPercentValue(50));
-        resumenTable.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.RIGHT);
+        resumenTable.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        resumenTable.setMarginTop(5);
 
-        // Subtotal
+        // 1. Subtotal
         agregarFilaMonto(resumenTable, "Subtotal:", String.format("S/ %.2f", cotizacion.getSubtotal()), false);
 
-        // IGV
+        // 2. IGV
         agregarFilaMonto(resumenTable, "IGV (18%):", String.format("S/ %.2f", cotizacion.getIGV()), false);
 
-        // Total
+        // 3. TOTAL (Destacado)
         agregarFilaMonto(resumenTable, "TOTAL:", String.format("S/ %.2f", cotizacion.getTotal()), true);
 
         document.add(resumenTable);
         document.add(new Paragraph("\n"));
     }
 
+    /**
+     * Helper para las filas de montos.
+     * Si 'esTotal' es true, aplica fondo azul y texto blanco.
+     */
     private void agregarFilaMonto(Table table, String label, String valor, boolean esTotal) {
+        // Celda Etiqueta (Ej: "Subtotal:")
         Cell labelCell = new Cell();
-        labelCell.add(new Paragraph(label).setBold());
-        if (esTotal) {
-            labelCell.setBackgroundColor(colorPrimario);
-            labelCell.setFontColor(ColorConstants.WHITE);
-        }
+        labelCell.add(new Paragraph(label).setBold().setFontSize(10));
         labelCell.setTextAlignment(TextAlignment.RIGHT);
-        labelCell.setPadding(10);
-
+        labelCell.setPadding(5);
+        
+        // Celda Valor (Ej: "S/ 100.00")
         Cell valorCell = new Cell();
-        Paragraph valorPara = new Paragraph(valor).setBold();
-        if (esTotal) {
-            valorPara.setFontSize(14);
-            valorCell.setBackgroundColor(colorPrimario);
-            valorCell.setFontColor(ColorConstants.WHITE);
-        }
-        valorCell.add(valorPara);
+        Paragraph pValor = new Paragraph(valor).setBold().setFontSize(10);
+        valorCell.add(pValor);
         valorCell.setTextAlignment(TextAlignment.RIGHT);
-        valorCell.setPadding(10);
+        valorCell.setPadding(5);
+
+        // Estilo especial para la fila del TOTAL FINAL
+        if (esTotal) {
+            // Fondo Azul Corporativo
+            labelCell.setBackgroundColor(colorPrimario);
+            valorCell.setBackgroundColor(colorPrimario);
+            
+            // Texto Blanco
+            labelCell.setFontColor(ColorConstants.WHITE);
+            valorCell.setFontColor(ColorConstants.WHITE);
+            
+            // Fuente un poco más grande
+            pValor.setFontSize(12);
+        } else {
+            // Bordes simples para las otras filas
+            // (Opcional: Si quieres sin bordes, usa Border.NO_BORDER)
+            labelCell.setBorder(new SolidBorder(ColorConstants.LIGHT_GRAY, 0.5f));
+            valorCell.setBorder(new SolidBorder(ColorConstants.LIGHT_GRAY, 0.5f));
+        }
 
         table.addCell(labelCell);
         table.addCell(valorCell);
@@ -495,49 +604,70 @@ public class PdfGeneratorService {
      * Agrega condiciones y vigencia
      */
     private void agregarCondicionesVigencia(Document document, Cotizacion cotizacion) {
-        Table condicionesTable = new Table(2);
+        Table condicionesTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
         condicionesTable.setWidth(UnitValue.createPercentValue(100));
+        condicionesTable.setMarginTop(10);
 
+        // 1. Condición de Pago
         Cell condPagoCell = new Cell();
-        condPagoCell.add(new Paragraph("Condición de Pago:").setBold());
-        condPagoCell.add(new Paragraph(cotizacion.getCondicionPago().getDescripcion()));
+        condPagoCell.add(new Paragraph("Condición de Pago:").setBold().setFontSize(9));
+        // Obtiene la descripción del enum (ej: "Contado contra entrega")
+        condPagoCell.add(new Paragraph(cotizacion.getCondicionPago().getDescripcion()).setFontSize(9));
         condPagoCell.setBackgroundColor(colorGrisClaro);
-        condPagoCell.setPadding(10);
+        condPagoCell.setBorder(Border.NO_BORDER);
+        condPagoCell.setPadding(8);
 
+        // 2. Vigencia / Validez
         Cell vigenciaCell = new Cell();
-        vigenciaCell.add(new Paragraph("Vigencia:").setBold());
-        vigenciaCell.add(new Paragraph("Válida hasta el " +
-                cotizacion.getFechaVigencia().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+        vigenciaCell.add(new Paragraph("Validez de la oferta:").setBold().setFontSize(9));
+        
+        // Usamos la propiedad configurada o un valor calculado
+        String validez = configuracion.getProperty("condicion.validez_oferta", "15 días");
+        
+        // Opcional: Si quisieras calcular la fecha exacta sumando días:
+        // String fechaVenc = cotizacion.getFechaVigencia().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        
+        vigenciaCell.add(new Paragraph(validez).setFontSize(9));
         vigenciaCell.setBackgroundColor(colorGrisClaro);
-        vigenciaCell.setPadding(10);
+        vigenciaCell.setBorder(Border.NO_BORDER);
+        vigenciaCell.setPadding(8);
 
+        // Agregamos celdas con un pequeño espacio entre ellas (usando bordes blancos si fuera una tabla compleja, 
+        // pero aquí es una tabla simple de 2 celdas pegadas).
+        // Para separarlas visualmente, podrías usar una tabla de 3 columnas {1, 0.1, 1} con la del medio vacía.
+        // Aquí usamos la versión estándar pegada:
         condicionesTable.addCell(condPagoCell);
+        
+        // Celda vacía para separar (truco visual)
+        Cell espacio = new Cell().setBorder(Border.NO_BORDER);
+        // Si quisieras separarlas, cambia la definición de la tabla arriba a new float[]{1, 0.1f, 1}
+        
         condicionesTable.addCell(vigenciaCell);
 
         document.add(condicionesTable);
+        document.add(new Paragraph("\n"));
     }
 
     /**
      * Agrega pie de página
      */
-    private void agregarPiePagina(Document document) {
+        private void agregarPiePagina(Document document) {
+        // Un poco de espacio antes del pie
         document.add(new Paragraph("\n\n"));
 
-        Paragraph footer = new Paragraph(
-                "InfleSusVentas SRL - Venta de Inflables Publicitarios\n" +
-                        configuracion.getProperty("empresa.direccion", "") + " | " +
-                        "Tel: " + configuracion.getProperty("empresa.telefono", "") + " | " +
-                        configuracion.getProperty("empresa.email", ""))
+        // Construimos el texto con los datos de empresa.properties
+        String textoFooter = configuracion.getProperty("empresa.razon_social", "INFLE SUS VENTAS SRL") + 
+                             " - Venta de Inflables Publicitarios\n" +
+                             configuracion.getProperty("empresa.direccion", "") + " | " +
+                             "Tel: " + configuracion.getProperty("empresa.telefono", "") + " | " +
+                             configuracion.getProperty("empresa.email", "");
+
+        Paragraph footer = new Paragraph(textoFooter)
                 .setFontSize(8)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setFontColor(ColorConstants.GRAY);
 
         document.add(footer);
-    }
-
-    public void generarCotizacionPdf(Cotizacion cotizacionActual, String rutaCompleta) {
-        // TODo Auto- generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'generarCotizacionPdf'");
     }
 
     /**
@@ -684,6 +814,24 @@ public class PdfGeneratorService {
         document.add(new Paragraph("\n"));
     }
 
+    private void agregarFilaCliente(Table table, String label, Object valor) {
+        Cell labelCell = new Cell();
+        labelCell.add(new Paragraph(label).setBold().setFontSize(9));
+        labelCell.setBackgroundColor(colorGrisClaro); // Fondo gris suave
+        labelCell.setBorder(Border.NO_BORDER); 
+        labelCell.setPadding(5); 
+
+        Cell valorCell = new Cell();
+        // Conversión segura a String para evitar errores si es null
+        String textoValor = (valor != null) ? valor.toString() : "-";
+        valorCell.add(new Paragraph(textoValor).setFontSize(9));
+        valorCell.setBorder(Border.NO_BORDER);
+        valorCell.setPadding(5);
+
+        table.addCell(labelCell);
+        table.addCell(valorCell);
+    }
+    
     /**
      * Datos del cliente (adaptado para facturas)
      */

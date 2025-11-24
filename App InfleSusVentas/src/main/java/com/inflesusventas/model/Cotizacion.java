@@ -19,7 +19,7 @@ public class Cotizacion {
     private boolean anulada = false; // Nuevo estado
 
 
-
+    
     // --- ENUM CORREGIDO (Con descripciones reales) ---
     public enum CondicionPago {
         CONTADO("Contado contra entrega"),

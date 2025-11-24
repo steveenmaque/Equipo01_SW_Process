@@ -143,7 +143,6 @@ public class MainWindow extends JFrame {
         panel.add(Box.createVerticalStrut(5));
         panel.add(crearBotonMenu("  → Historial NC", this::mostrarHistorialNC));
         panel.add(Box.createVerticalStrut(5));
-        panel.add(crearBotonMenu("Configuración", this::mostrarConfiguracion));
 
         // Espaciador
         panel.add(Box.createVerticalGlue());
