@@ -54,7 +54,6 @@ PrecioSinIGV = PrecioBase
 - Registrar información logística para los envíos como los siguientes datos:
     - Origen/destino
     - Vehículo y placa
-    - Nombre del conductor
-    - Licencia del conductor
+    - Nombre y DNI del conductor
     - Peso y volumen de los inflables transportados
 
