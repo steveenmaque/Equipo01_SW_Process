@@ -2,9 +2,8 @@
 
 ### Información General
 - **Fecha de Ejecución:** 2025-11-23
-- **Framework:** JUnit 5 (Jupiter)
+- **Framework:** JUnit 5 
 - **Tipo de Pruebas:** Caja Negra 
-- **Versión del Sistema:** 1.0-SNAPSHOT
 
 ---
 
@@ -74,4 +73,4 @@
 
 ## Estructura de Evidencias
 
-Las evidencias están organizadas en la carpeta `evidencias/` con la siguiente estructura:
+Las evidencias están organizadas en la carpeta `guide02/imagenes/evidencias-pruebas` con la siguiente estructura:
