@@ -420,5 +420,3 @@ Modelos:
     public String toString() {
         return "Guía " + serieNumero + " - " + razonSocialDestinatario;
     }
-
-- En caso sea la imagen, deberá ser en formato .png, .jpg y con resolución de 300 dpi.
