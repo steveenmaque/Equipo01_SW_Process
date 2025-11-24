@@ -18,7 +18,7 @@ En esta sección se presenta la descripción detallada de los casos de uso que c
 | **Actor** | Administrador |
 | **Precondición** | El cliente no existe previamente en el sistema. |
 | **Poscondición** | Cliente registrado en el sistema. |
-| **Flujo Principal** | 1. Administrador ingresa RUC del cliente<br>2. Administrador ingresa ruc y razón social<br>4. Administrador ingresa datos personales<br>5. Sistema almacena el cliente<br>6. Sistema confirma registro exitoso |
+| **Flujo Principal** | 1. Administrador ingresa RUC del cliente<br>2. Administrador ingresa razón social<br>4. Administrador ingresa datos personales<br>5. Sistema almacena el cliente<br>6. Sistema confirma registro exitoso |
 | **Reglas de Negocio** | **RN01:** RUC obligatorio de 11 dígitos<br>**RN02:** RUC debe ser único<br>**RN03:** Razón social es obligatoria<br>**RN04:** Datos personales son obligatorios |
 
 ---
