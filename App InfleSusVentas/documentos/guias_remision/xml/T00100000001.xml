@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DespatchAdvice xmlns="urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2">
+  <UBLVersionID>2.1</UBLVersionID>
+  <CustomizationID>2.0</CustomizationID>
+  <ID>T001-00000001</ID>
+  <IssueDate>2025-11-24</IssueDate>
+  <DespatchAdviceTypeCode>09</DespatchAdviceTypeCode>
+  <Note>Venta</Note>
+  <DespatchSupplierParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="6">20123456789</ID>
+      </PartyIdentification>
+      <PartyLegalEntity>
+        <RegistrationName>InfleSusVentas SRL</RegistrationName>
+      </PartyLegalEntity>
+    </Party>
+  </DespatchSupplierParty>
+  <DeliveryCustomerParty>
+    <Party>
+      <PartyIdentification>
+        <ID schemeID="6">20554542051</ID>
+      </PartyIdentification>
+      <PartyLegalEntity>
+        <RegistrationName>INFLESUSVENTAS SRL</RegistrationName>
+      </PartyLegalEntity>
+    </Party>
+  </DeliveryCustomerParty>
+  <Shipment>
+    <ID>1</ID>
+    <GrossWeightMeasure unitCode="KGM">30.00</GrossWeightMeasure>
+    <OriginAddress>
+      <AddressLine><Line>Calle San Francisco Mz 1-4 Lt 13A CP. Zapallal Alto 1ra Etapa. Puente Piedra, Lima</Line></AddressLine>
+    </OriginAddress>
+    <DeliveryAddress>
+      <AddressLine><Line>Av. Amezaga 123</Line></AddressLine>
+    </DeliveryAddress>
+    <TransportHandlingUnit>
+      <TransportMeans>
+        <RoadTransport>
+          <LicensePlateID>F3P - 138</LicensePlateID>
+        </RoadTransport>
+      </TransportMeans>
+    </TransportHandlingUnit>
+    <DriverPerson>
+      <ID schemeID="1">72327241</ID>
+      <FirstName>STEVEEN MAQUE ESPINOZA</FirstName>
+      <FamilyName></FamilyName>
+      <JobTitle>Principal</JobTitle>
+      <IdentityDocumentReference>
+        <ID>W72327241</ID>
+      </IdentityDocumentReference>
+    </DriverPerson>
+  </Shipment>
+  <DespatchLine>
+    <ID>1</ID>
+    <DeliveredQuantity unitCode="NIU">1</DeliveredQuantity>
+    <Item>
+      <Description>GLOBO INFLABLE PUBLICITARIO</Description>
+      <SellersItemIdentification>
+        <ID>001</ID>
+      </SellersItemIdentification>
+    </Item>
+  </DespatchLine>
+</DespatchAdvice>

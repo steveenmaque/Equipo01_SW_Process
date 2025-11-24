@@ -77,7 +77,7 @@ public class ClienteListView extends JPanel {
             setText("Ver Cotización");
             setFont(new Font("Arial", Font.BOLD, 11));
             setBackground(new Color(230, 130, 70)); // Naranja
-            setForeground(Color.WHITE);
+            setForeground(Color.BLACK);
         }
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,

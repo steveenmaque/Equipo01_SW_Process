@@ -1,7 +1,8 @@
 package com.inflesusventas.service;
 
-import com.inflesusventas.model.GuiaRemision;
 import com.inflesusventas.model.BienGuiaRemision;
+import com.inflesusventas.model.GuiaRemision;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.FileWriter;
@@ -11,34 +12,40 @@ import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Servicio para generación de documentos de Guía de Remisión
- * Ruta: src/main/java/com/inflesusventas/service/GuiaRemisionService.java
+ * Servicio para gestión de documentos de Guía de Remisión
+ * - Genera XML (Lógica interna para SUNAT)
+ * - Genera PDF (Delegando al PdfGeneratorService para diseño corporativo)
  */
 @Service
 public class GuiaRemisionService {
 
-    private static final String DIR_XML = "documentos/guias_remision/xml/";
-    private static final String DIR_PDF = "documentos/guias_remision/pdf/";
+    private static final String DIR_XML = "App InfleSusVentas/documentos/guias_remision/xml/";
+    
+    // Inyectamos el servicio profesional de PDFs
+    private final PdfGeneratorService pdfGeneratorService;
 
-    public GuiaRemisionService() {
+    @Autowired
+    public GuiaRemisionService(PdfGeneratorService pdfGeneratorService) {
+        this.pdfGeneratorService = pdfGeneratorService;
         crearDirectorios();
     }
 
     /**
-     * Crea los directorios necesarios
+     * Crea los directorios necesarios para los XML
+     * (Los directorios de PDF los gestiona PdfGeneratorService)
      */
     private void crearDirectorios() {
         try {
             Files.createDirectories(Paths.get(DIR_XML));
-            Files.createDirectories(Paths.get(DIR_PDF));
-            System.out.println("✓ Directorios de guías de remisión creados");
+            System.out.println("✓ Directorios de guías de remisión (XML) verificados");
         } catch (IOException e) {
             System.err.println("✗ Error al crear directorios: " + e.getMessage());
         }
     }
 
     /**
-     * Genera el XML de la guía de remisión según formato SUNAT
+     * Genera el XML de la guía de remisión según formato UBL 2.1 (SUNAT)
+     * Este método contiene toda la lógica de construcción del XML.
      */
     public String generarXML(GuiaRemision guia) throws IOException {
         String nombreArchivo = guia.getSerieNumero().replace("-", "") + ".xml";
@@ -81,7 +88,9 @@ public class GuiaRemisionService {
         xml.append("  <DeliveryCustomerParty>\n");
         xml.append("    <Party>\n");
         xml.append("      <PartyIdentification>\n");
-        xml.append("        <ID schemeID=\"").append(guia.getTipoDocumentoDestinatario().getCodigo()).append("\">")
+        // Validación básica por si es null el tipo de documento
+        String tipoDoc = (guia.getTipoDocumentoDestinatario() != null) ? guia.getTipoDocumentoDestinatario().getCodigo() : "6";
+        xml.append("        <ID schemeID=\"").append(tipoDoc).append("\">")
                 .append(guia.getNumeroDocumentoDestinatario()).append("</ID>\n");
         xml.append("      </PartyIdentification>\n");
         xml.append("      <PartyLegalEntity>\n");
@@ -96,7 +105,7 @@ public class GuiaRemisionService {
 
         // Peso bruto total
         double pesoTotal = guia.getPesoTotalCarga();
-        xml.append("    <GrossWeightMeasure unitCode=\"KGM\">").append(String.format("%.2f", pesoTotal)).append("</GrossWeightMeasure>\n");
+        xml.append("    <GrossWeightMeasure unitCode=\"KGM\">").append(String.format("%.2f", pesoTotal).replace(",", ".")).append("</GrossWeightMeasure>\n");
 
         // Punto de partida
         xml.append("    <OriginAddress>\n");
@@ -153,80 +162,22 @@ public class GuiaRemisionService {
             writer.write(xml.toString());
         }
 
-        System.out.println("✓ XML guardado: " + rutaCompleta);
+        System.out.println("✓ XML guardado correctamente en: " + rutaCompleta);
         return rutaCompleta;
     }
 
     /**
-     * Genera el PDF de la guía de remisión (versión simplificada)
+     * Genera el PDF delegando la tarea al servicio profesional PdfGeneratorService.
+     * Esto asegura que el diseño sea idéntico al de las cotizaciones y facturas.
      */
     public String generarPDF(GuiaRemision guia) throws IOException {
-        String nombreArchivo = guia.getSerieNumero().replace("-", "") + ".pdf";
-        String rutaCompleta = DIR_PDF + nombreArchivo;
-
-        // TODO: Implementar generación de PDF con iText (similar a PdfGeneratorService)
-        // Por ahora, generamos un archivo de texto con la información
-
-        StringBuilder contenido = new StringBuilder();
-        contenido.append("═══════════════════════════════════════════════════════════\n");
-        contenido.append("              GUÍA DE REMISIÓN ELECTRÓNICA\n");
-        contenido.append("═══════════════════════════════════════════════════════════\n\n");
-
-        contenido.append("Nº: ").append(guia.getSerieNumero()).append("\n");
-        contenido.append("Fecha de Emisión: ").append(guia.getFechaEmision().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("\n");
-        contenido.append("Motivo de Traslado: ").append(guia.getMotivoTraslado().getDescripcion()).append("\n\n");
-
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("REMITENTE:\n");
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("RUC: ").append(guia.getRucRemitente()).append("\n");
-        contenido.append("Razón Social: ").append(guia.getRazonSocialRemitente()).append("\n\n");
-
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("DESTINATARIO:\n");
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("Tipo Doc.: ").append(guia.getTipoDocumentoDestinatario().getDescripcion()).append("\n");
-        contenido.append("Nº Documento: ").append(guia.getNumeroDocumentoDestinatario()).append("\n");
-        contenido.append("Razón Social: ").append(guia.getRazonSocialDestinatario()).append("\n\n");
-
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("BIENES A TRASLADAR:\n");
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        for (BienGuiaRemision bien : guia.getBienes()) {
-            contenido.append(String.format("• %s - %s (Cant: %d, Peso: %.2f KG)\n",
-                    bien.getCodigoBien(),
-                    bien.getDescripcionDetallada(),
-                    bien.getCantidad(),
-                    bien.getPesoBrutoTotal()));
+        try {
+            // Aquí conectamos con el servicio que tiene los estilos corporativos
+            System.out.println("🔄 Generando PDF corporativo para Guía: " + guia.getSerieNumero());
+            return pdfGeneratorService.generarPdfGuiaRemision(guia);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException("Error crítico al generar PDF de Guía: " + e.getMessage());
         }
-        contenido.append("\nPeso Total: ").append(String.format("%.2f KG", guia.getPesoTotalCarga())).append("\n\n");
-
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("DATOS DE TRASLADO:\n");
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("Punto de Partida: ").append(guia.getPuntoPartida()).append("\n");
-        contenido.append("Punto de Llegada: ").append(guia.getPuntoLlegada()).append("\n");
-        contenido.append("Fecha de Inicio: ").append(guia.getDatosTransporte().getFechaInicioTraslado()
-                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("\n\n");
-
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("DATOS DE TRANSPORTE:\n");
-        contenido.append("───────────────────────────────────────────────────────────\n");
-        contenido.append("Tipo: ").append(guia.getDatosTransporte().getTipoTransporte().getDescripcion()).append("\n");
-        contenido.append("Placa: ").append(guia.getDatosTransporte().getNumeroPlaca()).append("\n");
-        contenido.append("Conductor: ").append(guia.getDatosTransporte().getNombreConductor())
-                .append(" ").append(guia.getDatosTransporte().getApellidosConductor()).append("\n");
-        contenido.append("Licencia: ").append(guia.getDatosTransporte().getNumeroLicencia()).append("\n\n");
-
-        contenido.append("═══════════════════════════════════════════════════════════\n");
-        contenido.append("           InfleSusVentas SRL - Sistema de Gestión\n");
-        contenido.append("═══════════════════════════════════════════════════════════\n");
-
-        // Guardar como archivo de texto (cambiar extensión a .txt temporalmente)
-        String rutaTxt = rutaCompleta.replace(".pdf", ".txt");
-        Files.writeString(Paths.get(rutaTxt), contenido.toString());
-
-        System.out.println("✓ Documento generado: " + rutaTxt);
-        return rutaTxt;
     }
 }

@@ -88,23 +88,23 @@ public class NotaCreditoListView extends JPanel {
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 15));
         panelBotones.setBackground(Color.WHITE);
 
-        JButton btnRefrescar = new JButton("🔄 Actualizar Lista");
+        JButton btnRefrescar = new JButton("Actualizar Lista");
         btnRefrescar.setFont(new Font("Arial", Font.PLAIN, 14));
         btnRefrescar.setPreferredSize(new Dimension(180, 35));
         btnRefrescar.setBackground(COLOR_PRIMARIO);
-        btnRefrescar.setForeground(Color.WHITE);
+        btnRefrescar.setForeground(Color.BLACK);
         btnRefrescar.setFocusPainted(false);
         btnRefrescar.addActionListener(e -> cargarDatos());
 
-        JButton btnVerPDF = new JButton("📄 Ver PDF");
+        JButton btnVerPDF = new JButton("Ver PDF");
         btnVerPDF.setFont(new Font("Arial", Font.PLAIN, 14));
         btnVerPDF.setPreferredSize(new Dimension(150, 35));
         btnVerPDF.setBackground(COLOR_EXITO);
-        btnVerPDF.setForeground(Color.WHITE);
+        btnVerPDF.setForeground(Color.BLACK);
         btnVerPDF.setFocusPainted(false);
         btnVerPDF.addActionListener(e -> verPDFSeleccionado());
 
-        JButton btnVerXML = new JButton("📝 Ver XML");
+        JButton btnVerXML = new JButton("Ver XML");
         btnVerXML.setFont(new Font("Arial", Font.PLAIN, 14));
         btnVerXML.setPreferredSize(new Dimension(150, 35));
         btnVerXML.setBackground(new Color(255, 193, 7));

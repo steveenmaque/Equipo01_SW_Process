@@ -26,33 +26,31 @@ public class GuiaFormView extends JPanel {
 
     private GuiaRemisionController controller;
 
-    // Componentes Paso 1: Configuración Inicial
-    private JComboBox<String> cmbTipoRemitente;
-    private JRadioButton rdoComercioExteriorSi, rdoComercioExteriorNo;
-    private JComboBox<MotivoTraslado> cmbMotivoTraslado;
+    // Componentes Paso 1: Configuración Inicial (Fijos)
+    // cmbTipoRemitente y cmbMotivoTraslado eliminados, ahora son fijos.
 
-    // Componentes Paso 2: Destinatario
-    private JComboBox<TipoDocumento> cmbTipoDocumento;
+    // Componentes Paso 2: Destinatario (Tipo Documento Fijo)
     private JTextField txtNumeroDocumento;
     private JTextField txtRazonSocial;
 
-    // Componentes Paso 5: Bienes
+    // Componentes Paso 3: Bienes
     private JTable tablaBienes;
     private DefaultTableModel modeloTablaBienes;
 
-    // Componentes Paso 6: Direcciones
-    private JTextField txtPuntoPartida;
+    // Componentes Paso 4: Direcciones (Punto Partida Fijo)
     private JTextField txtPuntoLlegada;
 
-    // Componentes Paso 7: Transporte
-    private JComboBox<TipoTransporte> cmbTipoTransporte;
+    // Componentes Paso 5: Transporte (Tipo Transporte Fijo, sin Entidad)
     private JTextField txtPlaca;
-    private JComboBox<EntidadAutorizacion> cmbEntidadAutorizacion;
     private JTextField txtNumeroLicencia;
-    private JTextField txtNombreConductor;
-    private JTextField txtApellidosConductor;
-    private JTextField txtDniConductor;
+    private JTextField txtNombreConductor; // Unificado para Nombre y Apellidos
+    // private JTextField txtApellidosConductor; // ELIMINADO
+    private JTextField txtDniConductor; // Mantenido
     private JSpinner spnFechaTraslado;
+
+    // Valor fijo del Punto de Partida
+    private static final String PUNTO_PARTIDA_FIJO = "Calle San Francisco Mz 1-4 Lt 13A CP. Zapallal Alto 1ra Etapa. Puente Piedra, Lima";
+
 
     public GuiaFormView(GuiaRemisionController controller) {
         this.controller = controller;
@@ -119,133 +117,101 @@ public class GuiaFormView extends JPanel {
         return panel;
     }
 
-    // ========== SECCIÓN 1: Configuración Inicial ==========
+    // ========== SECCIÓN 1: Configuración Inicial (Valores Fijos) ==========
     private JPanel crearSeccionConfiguracion() {
-        JPanel panel = crearPanelSeccion("1. Configuración Inicial");
-        panel.setLayout(new GridBagLayout());
+        JPanel panelSeccion = crearPanelSeccion("1. Configuración Inicial");
+        JPanel panelContenido = (JPanel) panelSeccion.getComponent(1);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        int row = 0;
-
-        // Tipo de Remitente
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0.3;
-        JLabel lblRemitente = new JLabel("Seleccionar:");
+        // Tipo de Remitente (FIJO)
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.3;
+        JLabel lblRemitente = new JLabel("Tipo de Remitente:");
         lblRemitente.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblRemitente, gbc);
+        panelContenido.add(lblRemitente, gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 0.7;
-        cmbTipoRemitente = new JComboBox<>(new String[] { "REMITENTE", "DESTINATARIO" });
-        cmbTipoRemitente.setSelectedIndex(0);
-        cmbTipoRemitente.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(cmbTipoRemitente, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.7;
+        JLabel lblRemitenteFijo = new JLabel("<html><b>REMITENTE</b></html>");
+        lblRemitenteFijo.setForeground(COLOR_PRIMARIO);
+        lblRemitenteFijo.setFont(new Font("Arial", Font.PLAIN, 13));
+        panelContenido.add(lblRemitenteFijo, gbc);
 
-        row++;
-
-        // Operación de comercio exterior
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        JLabel lblComercio = new JLabel("Operación de comercio exterior:");
-        lblComercio.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblComercio, gbc);
-
-        gbc.gridx = 1;
-        JPanel panelComercio = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelComercio.setBackground(Color.WHITE);
-        rdoComercioExteriorSi = new JRadioButton("SI");
-        rdoComercioExteriorNo = new JRadioButton("NO");
-        rdoComercioExteriorNo.setSelected(true);
-        ButtonGroup bgComercio = new ButtonGroup();
-        bgComercio.add(rdoComercioExteriorSi);
-        bgComercio.add(rdoComercioExteriorNo);
-        panelComercio.add(rdoComercioExteriorSi);
-        panelComercio.add(rdoComercioExteriorNo);
-        panel.add(panelComercio, gbc);
-
-        row++;
-
-        // Motivo de traslado
-        gbc.gridx = 0;
-        gbc.gridy = row;
+        // Motivo de traslado (FIJO)
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.3;
         JLabel lblMotivo = new JLabel("Motivo de traslado:");
         lblMotivo.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblMotivo, gbc);
+        panelContenido.add(lblMotivo, gbc);
 
-        gbc.gridx = 1;
-        cmbMotivoTraslado = new JComboBox<>(MotivoTraslado.values());
-        cmbMotivoTraslado.setSelectedItem(MotivoTraslado.VENTA);
-        cmbMotivoTraslado.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(cmbMotivoTraslado, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.7;
+        JLabel lblMotivoFijo = new JLabel("<html><b>VENTA</b></html>");
+        lblMotivoFijo.setForeground(COLOR_PRIMARIO);
+        lblMotivoFijo.setFont(new Font("Arial", Font.PLAIN, 13));
+        panelContenido.add(lblMotivoFijo, gbc);
 
-        return panel;
+        return panelSeccion;
     }
 
-    // ========== SECCIÓN 2: Destinatario ==========
+    // ========== SECCIÓN 2: Destinatario (Tipo Documento Fijo) ==========
     private JPanel crearSeccionDestinatario() {
-        JPanel panel = crearPanelSeccion("2. Datos del Destinatario");
-        panel.setLayout(new GridBagLayout());
+        JPanel panelSeccion = crearPanelSeccion("2. Datos del Destinatario");
+        JPanel panelContenido = (JPanel) panelSeccion.getComponent(1);
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
         int row = 0;
 
-        // Tipo de documento
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0.3;
+        // Tipo de documento (FIJO: RUC)
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3;
         JLabel lblTipoDoc = new JLabel("Tipo de documento:");
         lblTipoDoc.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblTipoDoc, gbc);
+        panelContenido.add(lblTipoDoc, gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 0.7;
-        cmbTipoDocumento = new JComboBox<>(TipoDocumento.values());
-        cmbTipoDocumento.setSelectedItem(TipoDocumento.RUC);
-        cmbTipoDocumento.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(cmbTipoDocumento, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.7;
+        JLabel lblTipoDocFijo = new JLabel("<html><b>RUC</b></html>");
+        lblTipoDocFijo.setForeground(COLOR_PRIMARIO);
+        lblTipoDocFijo.setFont(new Font("Arial", Font.PLAIN, 13));
+        panelContenido.add(lblTipoDocFijo, gbc);
 
         row++;
 
-        // Número de documento
-        gbc.gridx = 0;
-        gbc.gridy = row;
+        // Número de documento (VARIABLE)
+        gbc.gridx = 0; gbc.gridy = row;
         JLabel lblNumDoc = new JLabel("Número de documento: *");
         lblNumDoc.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblNumDoc, gbc);
+        panelContenido.add(lblNumDoc, gbc);
 
         gbc.gridx = 1;
         txtNumeroDocumento = new JTextField(20);
         txtNumeroDocumento.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtNumeroDocumento, gbc);
+        panelContenido.add(txtNumeroDocumento, gbc);
 
         row++;
 
-        // Razón Social
-        gbc.gridx = 0;
-        gbc.gridy = row;
+        // Razón Social (VARIABLE)
+        gbc.gridx = 0; gbc.gridy = row;
         JLabel lblRazon = new JLabel("Razón Social / Nombre: *");
         lblRazon.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblRazon, gbc);
+        panelContenido.add(lblRazon, gbc);
 
         gbc.gridx = 1;
         txtRazonSocial = new JTextField(30);
         txtRazonSocial.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtRazonSocial, gbc);
+        panelContenido.add(txtRazonSocial, gbc);
 
-        return panel;
+        return panelSeccion;
     }
 
     // ========== SECCIÓN 3: Bienes a Trasladar ==========
     private JPanel crearSeccionBienes() {
         JPanel panel = crearPanelSeccion("3. Bienes a Trasladar");
-        panel.setLayout(new BorderLayout(10, 10));
+        JPanel panelContenido = (JPanel) panel.getComponent(1);
+        panelContenido.setLayout(new BorderLayout(10, 10));
 
         // Tabla
         String[] columnas = { "Código", "Descripción", "Cantidad", "Peso (KG)" };
@@ -255,11 +221,11 @@ public class GuiaFormView extends JPanel {
         tablaBienes.setFont(new Font("Arial", Font.PLAIN, 13));
         tablaBienes.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
         tablaBienes.getTableHeader().setBackground(COLOR_PRIMARIO);
-        tablaBienes.getTableHeader().setForeground(Color.WHITE);
+        tablaBienes.getTableHeader().setForeground(Color.BLACK); // Texto en NEGRO para contraste
 
         JScrollPane scroll = new JScrollPane(tablaBienes);
         scroll.setPreferredSize(new Dimension(0, 200));
-        panel.add(scroll, BorderLayout.CENTER);
+        panelContenido.add(scroll, BorderLayout.CENTER);
 
         // Botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -268,67 +234,65 @@ public class GuiaFormView extends JPanel {
         JButton btnAgregar = new JButton("+ Agregar Bien");
         btnAgregar.setFont(new Font("Arial", Font.BOLD, 12));
         btnAgregar.setBackground(new Color(40, 167, 69));
-        btnAgregar.setForeground(Color.WHITE);
+        btnAgregar.setForeground(Color.BLACK);
         btnAgregar.setFocusPainted(false);
         btnAgregar.addActionListener(e -> agregarBien());
 
         JButton btnEliminar = new JButton("- Eliminar");
         btnEliminar.setFont(new Font("Arial", Font.BOLD, 12));
         btnEliminar.setBackground(new Color(220, 53, 69));
-        btnEliminar.setForeground(Color.WHITE);
+        btnEliminar.setForeground(Color.BLACK);
         btnEliminar.setFocusPainted(false);
         btnEliminar.addActionListener(e -> eliminarBien());
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnEliminar);
-        panel.add(panelBotones, BorderLayout.SOUTH);
+        panelContenido.add(panelBotones, BorderLayout.SOUTH);
 
         return panel;
     }
 
-    // ========== SECCIÓN 4: Direcciones ==========
+    // ========== SECCIÓN 4: Puntos de Partida y Llegada (Partida Fijo) ==========
     private JPanel crearSeccionDirecciones() {
-        JPanel panel = crearPanelSeccion("4. Puntos de Partida y Llegada");
-        panel.setLayout(new GridBagLayout());
+        JPanel panelSeccion = crearPanelSeccion("4. Puntos de Partida y Llegada");
+        JPanel panelContenido = (JPanel) panelSeccion.getComponent(1);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Punto de partida
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0.3;
+        // Punto de partida (FIJO)
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.3;
         JLabel lblPartida = new JLabel("Punto de Partida: *");
         lblPartida.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblPartida, gbc);
+        panelContenido.add(lblPartida, gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 0.7;
-        txtPuntoPartida = new JTextField(40);
-        txtPuntoPartida.setFont(new Font("Arial", Font.PLAIN, 13));
-        txtPuntoPartida.setText("Av. Ejemplo 123, Lima, Perú"); // Valor por defecto
-        panel.add(txtPuntoPartida, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.7;
+        JLabel lblPartidaFija = new JLabel("<html><b>" + PUNTO_PARTIDA_FIJO + "</b></html>");
+        lblPartidaFija.setFont(new Font("Arial", Font.PLAIN, 13));
+        lblPartidaFija.setForeground(COLOR_PRIMARIO);
+        panelContenido.add(lblPartidaFija, gbc);
 
-        // Punto de llegada
-        gbc.gridx = 0;
-        gbc.gridy = 1;
+        // Punto de llegada (VARIABLE)
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.3;
         JLabel lblLlegada = new JLabel("Punto de Llegada: *");
         lblLlegada.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblLlegada, gbc);
+        panelContenido.add(lblLlegada, gbc);
 
-        gbc.gridx = 1;
+        gbc.gridx = 1; gbc.weightx = 0.7;
         txtPuntoLlegada = new JTextField(40);
         txtPuntoLlegada.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtPuntoLlegada, gbc);
+        panelContenido.add(txtPuntoLlegada, gbc);
 
-        return panel;
+        return panelSeccion;
     }
 
-    // ========== SECCIÓN 5: Transporte ==========
+    // ========== SECCIÓN 5: Datos de Transporte (Nombre/Apellido UNIFICADO, DNI separado) ==========
     private JPanel crearSeccionTransporte() {
-        JPanel panel = crearPanelSeccion("5. Datos de Transporte");
-        panel.setLayout(new GridBagLayout());
+        JPanel panelSeccion = crearPanelSeccion("5. Datos de Transporte");
+        JPanel panelContenido = (JPanel) panelSeccion.getComponent(1);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -336,123 +300,86 @@ public class GuiaFormView extends JPanel {
 
         int row = 0;
 
-        // Tipo de transporte
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0.3;
+        // Tipo de transporte (FIJO: PRIVADO)
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3;
         JLabel lblTipo = new JLabel("Tipo de transporte:");
         lblTipo.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblTipo, gbc);
+        panelContenido.add(lblTipo, gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 0.7;
-        cmbTipoTransporte = new JComboBox<>(TipoTransporte.values());
-        cmbTipoTransporte.setSelectedItem(TipoTransporte.TRANSPORTE_PRIVADO);
-        cmbTipoTransporte.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(cmbTipoTransporte, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.7;
+        JLabel lblTipoFijo = new JLabel("<html><b>TRANSPORTE PRIVADO</b></html>");
+        lblTipoFijo.setForeground(COLOR_PRIMARIO);
+        lblTipoFijo.setFont(new Font("Arial", Font.PLAIN, 13));
+        panelContenido.add(lblTipoFijo, gbc);
 
         row++;
 
         // Placa
-        gbc.gridx = 0;
-        gbc.gridy = row;
+        gbc.gridx = 0; gbc.gridy = row;
         JLabel lblPlaca = new JLabel("Número de placa: *");
         lblPlaca.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblPlaca, gbc);
+        panelContenido.add(lblPlaca, gbc);
 
         gbc.gridx = 1;
         txtPlaca = new JTextField(15);
         txtPlaca.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtPlaca, gbc);
-
-        row++;
-
-        // Entidad autorización
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        JLabel lblEntidad = new JLabel("Entidad emisora:");
-        lblEntidad.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblEntidad, gbc);
-
-        gbc.gridx = 1;
-        cmbEntidadAutorizacion = new JComboBox<>(EntidadAutorizacion.values());
-        cmbEntidadAutorizacion.setSelectedItem(EntidadAutorizacion.MTC);
-        cmbEntidadAutorizacion.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(cmbEntidadAutorizacion, gbc);
+        panelContenido.add(txtPlaca, gbc);
 
         row++;
 
         // Número de licencia
-        gbc.gridx = 0;
-        gbc.gridy = row;
+        gbc.gridx = 0; gbc.gridy = row;
         JLabel lblLicencia = new JLabel("Número de licencia: *");
         lblLicencia.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblLicencia, gbc);
+        panelContenido.add(lblLicencia, gbc);
 
         gbc.gridx = 1;
         txtNumeroLicencia = new JTextField(15);
         txtNumeroLicencia.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtNumeroLicencia, gbc);
+        panelContenido.add(txtNumeroLicencia, gbc);
 
         row++;
 
-        // Nombre conductor
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        JLabel lblNombre = new JLabel("Nombre del conductor: *");
+        // Nombre y Apellidos conductor (UNIFICADO)
+        gbc.gridx = 0; gbc.gridy = row;
+        JLabel lblNombre = new JLabel("Nombre y Apellidos del conductor: *");
         lblNombre.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblNombre, gbc);
+        panelContenido.add(lblNombre, gbc);
 
         gbc.gridx = 1;
-        txtNombreConductor = new JTextField(20);
+        txtNombreConductor = new JTextField(40);
         txtNombreConductor.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtNombreConductor, gbc);
+        panelContenido.add(txtNombreConductor, gbc);
 
         row++;
 
-        // Apellidos conductor
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        JLabel lblApellidos = new JLabel("Apellidos del conductor: *");
-        lblApellidos.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblApellidos, gbc);
-
-        gbc.gridx = 1;
-        txtApellidosConductor = new JTextField(20);
-        txtApellidosConductor.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtApellidosConductor, gbc);
-
-        row++;
-
-        // DNI conductor
-        gbc.gridx = 0;
-        gbc.gridy = row;
+        // DNI conductor (Mantenido)
+        gbc.gridx = 0; gbc.gridy = row;
         JLabel lblDni = new JLabel("DNI del conductor: *");
         lblDni.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblDni, gbc);
+        panelContenido.add(lblDni, gbc);
 
         gbc.gridx = 1;
         txtDniConductor = new JTextField(8);
         txtDniConductor.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(txtDniConductor, gbc);
+        panelContenido.add(txtDniConductor, gbc);
 
         row++;
 
         // Fecha de inicio
-        gbc.gridx = 0;
-        gbc.gridy = row;
+        gbc.gridx = 0; gbc.gridy = row;
         JLabel lblFecha = new JLabel("Fecha de inicio de traslado:");
         lblFecha.setFont(new Font("Arial", Font.BOLD, 13));
-        panel.add(lblFecha, gbc);
+        panelContenido.add(lblFecha, gbc);
 
         gbc.gridx = 1;
         spnFechaTraslado = new JSpinner(new SpinnerDateModel());
         spnFechaTraslado.setEditor(new JSpinner.DateEditor(spnFechaTraslado, "dd/MM/yyyy"));
         spnFechaTraslado.setValue(new Date());
         spnFechaTraslado.setFont(new Font("Arial", Font.PLAIN, 13));
-        panel.add(spnFechaTraslado, gbc);
+        panelContenido.add(spnFechaTraslado, gbc);
 
-        return panel;
+        return panelSeccion;
     }
 
     // ========== Botón de Generar ==========
@@ -493,9 +420,10 @@ public class GuiaFormView extends JPanel {
 
         JPanel contenido = new JPanel();
         contenido.setBackground(Color.WHITE);
+        contenido.setLayout(new GridBagLayout());
         panel.add(contenido, BorderLayout.CENTER);
 
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 500));
 
         return panel;
     }
@@ -576,31 +504,30 @@ public class GuiaFormView extends JPanel {
         // Guardar todos los datos en el modelo
         GuiaRemision guia = controller.getGuiaActual();
 
-        // Sección 1
-        guia.setTipoRemitente(
-                cmbTipoRemitente.getSelectedItem().equals("REMITENTE")
-                        ? TipoRemitente.REMITENTE
-                        : TipoRemitente.DESTINATARIO);
-        guia.setOperacionComercioExterior(rdoComercioExteriorSi.isSelected());
-        guia.setMotivoTraslado((MotivoTraslado) cmbMotivoTraslado.getSelectedItem());
+        // Sección 1 (Valores Fijos)
+        guia.setTipoRemitente(TipoRemitente.REMITENTE);
+        guia.setOperacionComercioExterior(false); // Eliminada la opción
+        guia.setMotivoTraslado(MotivoTraslado.VENTA);
 
-        // Sección 2
-        guia.setTipoDocumentoDestinatario((TipoDocumento) cmbTipoDocumento.getSelectedItem());
+        // Sección 2 (Tipo Documento Fijo)
+        guia.setTipoDocumentoDestinatario(TipoDocumento.RUC);
         guia.setNumeroDocumentoDestinatario(txtNumeroDocumento.getText().trim());
         guia.setRazonSocialDestinatario(txtRazonSocial.getText().trim());
 
-        // Sección 4
-        guia.setPuntoPartida(txtPuntoPartida.getText().trim());
+        // Sección 4 (Punto de Partida Fijo)
+        guia.setPuntoPartida(PUNTO_PARTIDA_FIJO);
         guia.setPuntoLlegada(txtPuntoLlegada.getText().trim());
 
-        // Sección 5
+        // Sección 5 (Nombre/Apellido unificado, DNI separado)
         DatosTransporte transporte = guia.getDatosTransporte();
-        transporte.setTipoTransporte((TipoTransporte) cmbTipoTransporte.getSelectedItem());
+        transporte.setTipoTransporte(TipoTransporte.TRANSPORTE_PRIVADO); // Valor Fijo
         transporte.setNumeroPlaca(txtPlaca.getText().trim());
-        transporte.setEntidadAutorizacion((EntidadAutorizacion) cmbEntidadAutorizacion.getSelectedItem());
+        transporte.setEntidadAutorizacion(EntidadAutorizacion.MTC); // Se mantiene este valor en el modelo
         transporte.setNumeroLicencia(txtNumeroLicencia.getText().trim());
+
+        // Nombre y Apellidos unificados
         transporte.setNombreConductor(txtNombreConductor.getText().trim());
-        transporte.setApellidosConductor(txtApellidosConductor.getText().trim());
+        transporte.setApellidosConductor(""); // Se deja vacío
         transporte.setDniConductor(txtDniConductor.getText().trim());
 
         Date fecha = (Date) spnFechaTraslado.getValue();
@@ -664,15 +591,7 @@ public class GuiaFormView extends JPanel {
         }
 
         // Validar direcciones
-        if (txtPuntoPartida.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Ingrese el punto de partida",
-                    "Campo Obligatorio",
-                    JOptionPane.WARNING_MESSAGE);
-            txtPuntoPartida.requestFocus();
-            return false;
-        }
-
+        // Punto de partida es fijo, solo validamos Llegada
         if (txtPuntoLlegada.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Ingrese el punto de llegada",
@@ -701,24 +620,17 @@ public class GuiaFormView extends JPanel {
             return false;
         }
 
+        // Validar Nombre y Apellidos unificado
         if (txtNombreConductor.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Ingrese el nombre del conductor",
+                    "Ingrese el nombre y apellidos del conductor",
                     "Campo Obligatorio",
                     JOptionPane.WARNING_MESSAGE);
             txtNombreConductor.requestFocus();
             return false;
         }
 
-        if (txtApellidosConductor.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Ingrese los apellidos del conductor",
-                    "Campo Obligatorio",
-                    JOptionPane.WARNING_MESSAGE);
-            txtApellidosConductor.requestFocus();
-            return false;
-        }
-
+        // Validar DNI
         if (txtDniConductor.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Ingrese el DNI del conductor",
@@ -753,27 +665,22 @@ public class GuiaFormView extends JPanel {
             // Reiniciar controlador
             controller.iniciarNuevaGuia();
 
-            // Limpiar campos
-            cmbTipoRemitente.setSelectedIndex(0);
-            rdoComercioExteriorNo.setSelected(true);
-            cmbMotivoTraslado.setSelectedItem(MotivoTraslado.VENTA);
-
-            cmbTipoDocumento.setSelectedItem(TipoDocumento.RUC);
+            // Limpiar campos variables
             txtNumeroDocumento.setText("");
             txtRazonSocial.setText("");
 
             modeloTablaBienes.setRowCount(0);
 
-            txtPuntoPartida.setText("Av. Ejemplo 123, Lima, Perú");
             txtPuntoLlegada.setText("");
 
-            cmbTipoTransporte.setSelectedItem(TipoTransporte.TRANSPORTE_PRIVADO);
             txtPlaca.setText("");
-            cmbEntidadAutorizacion.setSelectedItem(EntidadAutorizacion.MTC);
             txtNumeroLicencia.setText("");
+
+            // Campos de conductor
             txtNombreConductor.setText("");
-            txtApellidosConductor.setText("");
+            // txtApellidosConductor.setText(""); // ELIMINADO
             txtDniConductor.setText("");
+
             spnFechaTraslado.setValue(new Date());
 
             // Actualizar número de serie en el encabezado

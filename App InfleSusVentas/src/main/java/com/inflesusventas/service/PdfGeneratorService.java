@@ -49,6 +49,7 @@ public class PdfGeneratorService {
     private static final String DIRECTORIO_PDF = "App InfleSusVentas/documentos/pdf/cotizaciones/";
     private static final String CONFIG_FILE = "App InfleSusVentas/src/main/resources/config/empresa.properties";
     private static final String LOGO_PATH = "App InfleSusVentas/src/main/resources/images/logo_empresa.png";
+    private static final String DIRECTORIO_GUIAS = "App InfleSusVentas/documentos/guias_remision/pdf/";
 
     // Colores corporativos (se cargan desde properties)
     private Color colorPrimario = new DeviceRgb(102, 126, 234); // #667eea
@@ -1232,4 +1233,144 @@ public class PdfGeneratorService {
         table.addCell(new Cell().add(new Paragraph(label).setBold()));
         table.addCell(new Cell().add(new Paragraph(valor)));
     }
+
+    public String generarPdfGuiaRemision(com.inflesusventas.model.GuiaRemision guia) throws Exception {
+        // Asegurar directorio
+        Files.createDirectories(Paths.get(DIRECTORIO_GUIAS));
+
+        String nombreArchivo = guia.getSerieNumero() + ".pdf";
+        String rutaCompleta = DIRECTORIO_GUIAS + nombreArchivo;
+
+        PdfWriter writer = new PdfWriter(rutaCompleta);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        Document document = new Document(pdfDoc, PageSize.A4);
+        document.setMargins(30, 30, 30, 30);
+
+        // 1. ENCABEZADO (Logo y datos empresa)
+        agregarEncabezadoConLogo(document);
+        agregarLineaSeparadora(document, colorPrimario);
+
+        // 2. TÍTULO Y DATOS GENERALES
+        Paragraph titulo = new Paragraph("GUÍA DE REMISIÓN ELECTRÓNICA - REMITENTE")
+                .setFontSize(16).setBold().setFontColor(colorPrimario)
+                .setTextAlignment(TextAlignment.CENTER).setMarginTop(10);
+        document.add(titulo);
+
+        // Tabla de datos clave (Serie, Fecha, Motivo)
+        Table infoTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1}));
+        infoTable.setWidth(UnitValue.createPercentValue(100)).setMarginTop(10);
+
+        agregarCeldaDestacada(infoTable, "Nº DE GUÍA", guia.getSerieNumero());
+        agregarCeldaDestacada(infoTable, "FECHA EMISIÓN", guia.getFechaEmision().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        agregarCeldaDestacada(infoTable, "MOTIVO TRASLADO", guia.getMotivoTraslado().getDescripcion());
+
+        document.add(infoTable);
+        document.add(new Paragraph("\n"));
+
+        // 3. PUNTOS DE PARTIDA Y LLEGADA (Lado a Lado)
+        Table rutasTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
+        rutasTable.setWidth(UnitValue.createPercentValue(100));
+
+        // Columna Partida
+        Cell cellPartida = new Cell().setBorder(new SolidBorder(colorPrimario, 1));
+        cellPartida.add(new Paragraph("PUNTO DE PARTIDA").setBold().setFontColor(ColorConstants.WHITE).setBackgroundColor(colorPrimario).setTextAlignment(TextAlignment.CENTER));
+        cellPartida.add(new Paragraph(guia.getPuntoPartida()).setFontSize(9).setPadding(5));
+        
+        // Columna Llegada
+        Cell cellLlegada = new Cell().setBorder(new SolidBorder(colorPrimario, 1));
+        cellLlegada.add(new Paragraph("PUNTO DE LLEGADA").setBold().setFontColor(ColorConstants.WHITE).setBackgroundColor(colorPrimario).setTextAlignment(TextAlignment.CENTER));
+        cellLlegada.add(new Paragraph(guia.getPuntoLlegada()).setFontSize(9).setPadding(5));
+
+        rutasTable.addCell(cellPartida); // Sin borde intermedio para separar visualmente
+        rutasTable.addCell(new Cell().setBorder(Border.NO_BORDER).setWidth(UnitValue.createPercentValue(5))); // Espacio
+        rutasTable.addCell(cellLlegada);
+
+        // Nota: Para que el espacio funcione, ajusta la definición de columnas a {1, 0.1f, 1} o usa una tabla simple:
+        // Simplificamos para este ejemplo usando una tabla directa:
+        document.add(new Paragraph("DATOS DEL TRASLADO").setBold().setFontColor(colorSecundario));
+        Table trasladoTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
+        trasladoTable.setWidth(UnitValue.createPercentValue(100));
+        
+        trasladoTable.addHeaderCell(new Cell().add(new Paragraph("PUNTO DE PARTIDA").setBold().setFontColor(ColorConstants.WHITE)).setBackgroundColor(colorPrimario));
+        trasladoTable.addHeaderCell(new Cell().add(new Paragraph("PUNTO DE LLEGADA").setBold().setFontColor(ColorConstants.WHITE)).setBackgroundColor(colorPrimario));
+        
+        trasladoTable.addCell(new Cell().add(new Paragraph(guia.getPuntoPartida()).setFontSize(9)));
+        trasladoTable.addCell(new Cell().add(new Paragraph(guia.getPuntoLlegada()).setFontSize(9)));
+        
+        document.add(trasladoTable);
+        document.add(new Paragraph("\n"));
+
+        // 4. DATOS DEL DESTINATARIO Y TRANSPORTE
+        Table datosTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
+        datosTable.setWidth(UnitValue.createPercentValue(100));
+
+        // Destinatario
+        Cell cellDest = new Cell().setBorder(Border.NO_BORDER);
+        cellDest.add(new Paragraph("DATOS DEL DESTINATARIO").setBold().setFontColor(colorSecundario));
+        cellDest.add(new Paragraph("Razón Social: " + guia.getRazonSocialDestinatario()).setFontSize(9));
+        cellDest.add(new Paragraph("RUC/Doc: " + guia.getNumeroDocumentoDestinatario()).setFontSize(9));
+
+        // Transporte
+        Cell cellTrans = new Cell().setBorder(Border.NO_BORDER);
+        cellTrans.add(new Paragraph("DATOS DEL TRANSPORTE").setBold().setFontColor(colorSecundario));
+        cellTrans.add(new Paragraph("Conductor: " + guia.getDatosTransporte().getNombreConductor() + " " + guia.getDatosTransporte().getApellidosConductor()).setFontSize(9));
+        cellTrans.add(new Paragraph("Licencia: " + guia.getDatosTransporte().getNumeroLicencia()).setFontSize(9));
+        cellTrans.add(new Paragraph("Vehículo/Placa: " + guia.getDatosTransporte().getNumeroPlaca()).setFontSize(9));
+        cellTrans.add(new Paragraph("F. Inicio Traslado: " + guia.getDatosTransporte().getFechaInicioTraslado().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).setFontSize(9));
+
+        datosTable.addCell(cellDest);
+        datosTable.addCell(cellTrans);
+        document.add(datosTable);
+        document.add(new Paragraph("\n"));
+
+        // 5. TABLA DE BIENES
+        Paragraph tituloBienes = new Paragraph("BIENES A TRASLADAR")
+                .setFontSize(12).setBold().setFontColor(colorPrimario);
+        document.add(tituloBienes);
+
+        Table bienesTable = new Table(UnitValue.createPercentArray(new float[]{0.5f, 1, 4, 1, 1}));
+        bienesTable.setWidth(UnitValue.createPercentValue(100));
+
+        // Encabezados
+        String[] headers = {"ITEM", "CÓDIGO", "DESCRIPCIÓN", "UND", "PESO (KG)"};
+        for (String h : headers) {
+            bienesTable.addHeaderCell(new Cell().add(new Paragraph(h).setBold().setFontColor(ColorConstants.WHITE).setFontSize(8)).setBackgroundColor(colorPrimario).setTextAlignment(TextAlignment.CENTER));
+        }
+
+        // Filas
+        int item = 1;
+        for (com.inflesusventas.model.BienGuiaRemision bien : guia.getBienes()) {
+            bienesTable.addCell(crearCeldaCuerpo(String.valueOf(item++), TextAlignment.CENTER));
+            bienesTable.addCell(crearCeldaCuerpo(bien.getCodigoBien(), TextAlignment.CENTER));
+            bienesTable.addCell(crearCeldaCuerpo(bien.getDescripcionDetallada(), TextAlignment.LEFT));
+            bienesTable.addCell(crearCeldaCuerpo(bien.getUnidadMedida(), TextAlignment.CENTER));
+            bienesTable.addCell(crearCeldaCuerpo(String.format("%.2f", bien.getPesoBrutoTotal()), TextAlignment.RIGHT));
+        }
+
+        document.add(bienesTable);
+        
+        // Peso Total
+        Paragraph pesoTotal = new Paragraph("PESO BRUTO TOTAL: " + String.format("%.2f KG", guia.getPesoTotalCarga()))
+                .setBold().setTextAlignment(TextAlignment.RIGHT).setMarginTop(5);
+        document.add(pesoTotal);
+
+        // Pie de página
+        agregarPiePagina(document);
+
+        document.close();
+        return rutaCompleta;
+    }
+
+    // Helper para las celdas destacadas de la cabecera
+    private void agregarCeldaDestacada(Table table, String titulo, String valor) {
+        Cell cell = new Cell();
+        cell.add(new Paragraph(titulo).setFontSize(8).setBold().setFontColor(colorSecundario));
+        cell.add(new Paragraph(valor).setFontSize(11).setBold());
+        cell.setBorder(new SolidBorder(ColorConstants.LIGHT_GRAY, 0.5f));
+        cell.setBackgroundColor(colorGrisClaro);
+        cell.setTextAlignment(TextAlignment.CENTER);
+        cell.setPadding(5);
+        table.addCell(cell);
+    }
+    
 }
