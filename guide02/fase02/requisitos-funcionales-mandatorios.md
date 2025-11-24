@@ -34,8 +34,6 @@ PrecioSinIGV = PrecioBase
 ### 3. Emisión de comprobantes electrónicos
 
 - Emitir solamente facturas y notas de crédito en formato electrónico (XML y PDF).
-- Incluir el código QR, logo de la empresa y datos de SUNAT obligatorios.
-- Conectarse a SUNAT para validar cada comprobante en línea.
 
 ### 4. Generación de guías de remisión (GRE)
 
@@ -44,19 +42,19 @@ PrecioSinIGV = PrecioBase
     - Origen y destino
     - Fecha de traslado
     - Vehículo y placa
-    - Conductor (nombre y DNI)
+    - Conductor
     - Peso/volumen de la carga
 
 ### 5. Almacenamiento y envío de documentos electrónicos
 
 - Almacenar todos los comprobantes y cotizaciones en formato PDF y XML.
-- Permitir la descarga y el envío automático por correo electrónico al cliente.
 
 ### 6. Registro de datos de traslado
 
 - Registrar información logística para los envíos como los siguientes datos:
     - Origen/destino
     - Vehículo y placa
-    - Nombre y DNI del conductor
+    - Nombre del conductor
+    - Licencia del conductor
     - Peso y volumen de los inflables transportados
 
