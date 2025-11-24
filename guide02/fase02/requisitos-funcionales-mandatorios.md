@@ -37,7 +37,7 @@ PrecioSinIGV = PrecioBase
 
 ### 4. Generación de guías de remisión (GRE)
 
-- Permitir generar GRE asociadas al número de orden de compra (OC).
+- Permitir generar GRE.
 - Los campos obligatorios son los siguientes:
     - Origen y destino
     - Fecha de traslado
