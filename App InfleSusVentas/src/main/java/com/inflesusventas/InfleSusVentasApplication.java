@@ -63,12 +63,6 @@ public class InfleSusVentasApplication {
 
         System.out.println("===========================================");
         System.out.println("  Sistema iniciado correctamente");
-        System.out.println("  Modo: DESKTOP (Sin servidor web)");
-        System.out.println("  Documentos: Almacenamiento local");
-        System.out.println("  Módulos disponibles:");
-        System.out.println("    - Cotizaciones");
-        System.out.println("    - Comprobantes Electrónicos");
-        System.out.println("    - Guías de Remisión ✨ NUEVO");
         System.out.println("===========================================");
     }
 }

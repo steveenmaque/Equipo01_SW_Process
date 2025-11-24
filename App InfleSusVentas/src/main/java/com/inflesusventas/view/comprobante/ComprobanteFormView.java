@@ -190,8 +190,9 @@ public class ComprobanteFormView extends JPanel {
     private JPanel crearSeccionTablaProductos() {
         JPanel panel = crearPanelSeccion("Productos de la Cotización - Selecciona para procesar");
 
-        // Nuevas columnas con ID de Factura
-        String[] columnas = {"ID Factura", "RUC Cliente", "Razón Social", "Productos", "Subtotal (S/)", "Condición"};
+        // Definición de columnas
+        String[] columnas = {"Estado", "RUC Cliente", "Razón Social", "Productos", "Subtotal (S/)", "Condición"};
+        
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override 
             public boolean isCellEditable(int row, int column) { 
@@ -201,44 +202,54 @@ public class ComprobanteFormView extends JPanel {
 
         tablaProductos = new JTable(modeloTabla);
         tablaProductos.setFont(new Font("Arial", Font.PLAIN, 13));
-        tablaProductos.setRowHeight(80); // Altura mayor para mostrar múltiples productos
+        tablaProductos.setRowHeight(60); 
         tablaProductos.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
         
-        // Configurar renderizador para mostrar saltos de línea en la columna "Productos"
-        tablaProductos.getColumnModel().getColumn(3).setCellRenderer(new MultiLineTableCellRenderer());
-        
-        // Ajustar anchos de columnas
-        tablaProductos.getColumnModel().getColumn(0).setPreferredWidth(150); // ID Factura
-        tablaProductos.getColumnModel().getColumn(1).setPreferredWidth(120); // RUC
+        // Ajustar anchos visuales
+        tablaProductos.getColumnModel().getColumn(0).setPreferredWidth(150); // Estado
+        tablaProductos.getColumnModel().getColumn(1).setPreferredWidth(100); // RUC
         tablaProductos.getColumnModel().getColumn(2).setPreferredWidth(200); // Razón Social
-        tablaProductos.getColumnModel().getColumn(3).setPreferredWidth(300); // Productos (más ancho)
-        tablaProductos.getColumnModel().getColumn(4).setPreferredWidth(100); // Subtotal
-        tablaProductos.getColumnModel().getColumn(5).setPreferredWidth(100); // Condición
+        tablaProductos.getColumnModel().getColumn(3).setPreferredWidth(300); // Productos
+        
+        // Renderer para saltos de línea en productos
+        tablaProductos.getColumnModel().getColumn(3).setCellRenderer(new MultiLineTableCellRenderer());
 
         JScrollPane scrollTabla = new JScrollPane(tablaProductos);
         scrollTablaProductos = scrollTabla;
         ajustarAltoTabla();
         panel.add(scrollTablaProductos, BorderLayout.CENTER);
 
-        // Listener selección
+        // --- LISTENER DE SELECCIÓN CORREGIDO ---
         tablaProductos.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override 
             public void valueChanged(ListSelectionEvent e) {
+                // Evitar doble evento (mouse down/up)
                 if (!e.getValueIsAdjusting()) {
                     int fila = tablaProductos.getSelectedRow();
                     
+                    // Validar que la fila sea válida y exista en la lista
                     if (fila != -1 && fila < listaCotizaciones.size()) {
                         Cotizacion cotSelected = listaCotizaciones.get(fila);
                         
-                        // VERIFICAR SI ESTÁ FACTURADA USANDO EL MODELO
+                        // LÓGICA CLAVE: Solo bloqueamos si isFacturada() es TRUE.
+                        // Si fue anulada, el controlador ya puso facturada = false, 
+                        // por lo tanto entrará al 'else' y permitirá seleccionarla.
+                        
                         if (cotSelected.isFacturada()) {
+                            // ESTÁ BLOQUEADA (Ya tiene factura activa)
                             mostrarSecciones(false);
-                            JOptionPane.showMessageDialog(ComprobanteFormView.this,
-                                "Esta cotización ya fue procesada anteriormente.",
-                                "Aviso", JOptionPane.INFORMATION_MESSAGE);
+                            
+                            String msg = "Esta cotización ya fue facturada.\nID Factura: " + 
+                                         (cotSelected.getIdFacturaGenerada() != null ? cotSelected.getIdFacturaGenerada() : "Desc.");
+                            
+                            JOptionPane.showMessageDialog(ComprobanteFormView.this, msg, "Aviso", JOptionPane.INFORMATION_MESSAGE);
+                            
+                            // Deseleccionar para evitar confusión
                             tablaProductos.clearSelection();
                         } else {
+                            // ESTÁ DISPONIBLE (Es nueva, o fue anulada previamente)
                             cargarDatosCotizacionSeleccionada(cotSelected);
+                            
                             mostrarSecciones(true);
                             poblarSeccion1DesdeCotizacion(cotSelected);
                             poblarSeccion2SegunCondicion(cotSelected);
@@ -248,6 +259,7 @@ public class ComprobanteFormView extends JPanel {
                 }
             }
         });
+
         return panel;
     }
 
@@ -513,54 +525,63 @@ public class ComprobanteFormView extends JPanel {
      * @param cotizacion La cotización a agregar
      * @param indice Posición en la lista (usado como ID interno)
      */
-        private void agregarCotizacionATabla(Cotizacion cotizacion, int indice) {
+    /**
+     * Agrega una fila a la tabla de comprobantes pendientes
+     */
+    private void agregarCotizacionATabla(Cotizacion cotizacion, int indice) {
         List<ProductoCotizacion> productos = cotizacion.getProductos();
         double subtotalSinIgv = 0.0;
-        for (ProductoCotizacion p : productos) {
-            subtotalSinIgv += p.getSubtotal();
-        }
         
-        String ruc = (cotizacion.getCliente() != null) ? cotizacion.getCliente().getRuc() : "-";
-        String razonSocial = (cotizacion.getCliente() != null) ? cotizacion.getCliente().getRazonSocial() : "-";
-        String condicionPago = (cotizacion.getCondicionPago() == null) ? "-" : cotizacion.getCondicionPago().toString();
-        
-        String estadoFactura;
-    
-        if (cotizacion.isFacturada()) {
-            // Si está facturada, mostramos el check y el ID
-            estadoFactura = "✓ FACTURADA (" + (cotizacion.getIdFacturaGenerada() != null ? cotizacion.getIdFacturaGenerada() : "") + ")";
-        } else if (cotizacion.isAnulada()) {
-            // Si NO está facturada pero TIENE marca de anulada, es una re-emisión
-            estadoFactura = " PENDIENTE (Prev. Anulada)";
-        } else {
-            // Estado normal
-            estadoFactura = "PENDIENTE";
-        }
-        
-        // USAMOS EL CAMPO PERSISTENTE DEL MODELO
-        if (cotizacion.isFacturada()) {
-            estadoFactura = "✓ FACTURADA"; // O puedes poner el ID si lo guardaras en la cotización
-        } else {
-            estadoFactura = "PENDIENTE";
-        }
-        
-        // Construir HTML lista productos (sin cambios)
+        // Construir lista de productos (HTML) y calcular subtotal
         StringBuilder listaProductos = new StringBuilder("<html>");
-        for (int i = 0; i < productos.size(); i++) {
-            ProductoCotizacion p = productos.get(i);
-            listaProductos.append("• ").append(p.getDescripcion());
-            if (i < productos.size() - 1) listaProductos.append("<br>");
+        
+        if (productos != null) {
+            for (int i = 0; i < productos.size(); i++) {
+                ProductoCotizacion p = productos.get(i);
+                
+                if (p != null) {
+                    subtotalSinIgv += p.getSubtotal();
+                    
+                    // CORRECCIÓN: Validación de nulos
+                    String desc = (p.getDescripcion() != null) ? p.getDescripcion() : "Producto sin nombre";
+                    listaProductos.append("• ").append(desc);
+                    
+                    // Agregar salto de línea si no es el último
+                    if (i < productos.size() - 1) {
+                        listaProductos.append("<br>");
+                    }
+                }
+            }
         }
         listaProductos.append("</html>");
         
+        // Datos del cliente
+        String ruc = (cotizacion.getCliente() != null && cotizacion.getCliente().getRuc() != null) 
+                     ? cotizacion.getCliente().getRuc() : "-";
+        String razonSocial = (cotizacion.getCliente() != null && cotizacion.getCliente().getRazonSocial() != null) 
+                             ? cotizacion.getCliente().getRazonSocial() : "-";
+        String condicionPago = (cotizacion.getCondicionPago() == null) 
+                               ? "-" : cotizacion.getCondicionPago().toString();
+        
+        // Lógica de Estado Visual
+        String estadoFactura;
+        if (cotizacion.isFacturada()) {
+            estadoFactura = "☒ FACTURADA"; 
+        } else if (cotizacion.isAnulada()) {
+            estadoFactura = "⚠️ PENDIENTE (Re-Emisión)";
+        } else {
+            estadoFactura = "☐ PENDIENTE";
+        }
+        
         Object[] fila = new Object[] {
-            estadoFactura, // Columna 0
+            estadoFactura,
             ruc,
             razonSocial,
             listaProductos.toString(),
             String.format("%.2f", subtotalSinIgv),
             condicionPago
         };
+        
         modeloTabla.addRow(fila);
     }
 
@@ -596,11 +617,6 @@ public class ComprobanteFormView extends JPanel {
                 txtRazonSocial.setText("");
             }
         }
-    }
-
-    private void poblarSeccion1DesdeCotizacion() {
-        Cotizacion ctz = cotizacionController.getCotizacionActual();
-        poblarSeccion1DesdeCotizacion(ctz);
     }
 
     private String safeToString(Object o) { return (o == null) ? "-" : o.toString(); }
@@ -1156,6 +1172,7 @@ public class ComprobanteFormView extends JPanel {
                     String idFacturaGenerado = String.format("%s-%s-%08d",
                     datosXML.rucCliente, datosXML.serie, datosXML.numero);
                     
+                    
                     Cliente clienteFactura = new Cliente();
                     clienteFactura.setId(0); // 0 para que el servicio decida si crea o actualiza (según tu lógica de servicio)
                     clienteFactura.setRuc(datosXML.rucCliente);
@@ -1168,6 +1185,12 @@ public class ComprobanteFormView extends JPanel {
                     
                     cotizacion.setFacturada(true);
                     cotizacion.setIdFacturaGenerada(idFacturaGenerado);
+
+                    mapaIdFacturas.put(indiceCotizacion, idFacturaGenerado);
+
+                    final String xmlFinal = rutaXML;
+                    final String pdfFinal = rutaPDF;
+
                     cotizacionController.actualizarCotizacion(cotizacion); 
                     if (clienteService != null) {
                     // Nota: Tu servicio debe ser capaz de buscar por RUC para no duplicar
@@ -1195,17 +1218,17 @@ public class ComprobanteFormView extends JPanel {
                     cotizacionesFacturadas.add(indiceCotizacion); // Usar índice
                     mapaIdFacturas.put(indiceCotizacion, idFacturaGenerado); // Usar índice
                     
-                    final String xmlFinal = rutaXML;
-                    final String pdfFinal = rutaPDF;
-                    
                     SwingUtilities.invokeLater(() -> {
                         restaurarBoton();
-                        refrescarTablaCompleta(); // Ahora se verá como "FACTURADA"
+                        
+                        // Recargar todo para ver el cambio visual
+                        cargarProductosDesdeCotizacion(); 
+                        
                         mostrarSecciones(false);
                         tablaProductos.clearSelection();
                         mostrarDialogoExito(xmlFinal, pdfFinal);
                     });
-                                        
+                         
                 } catch (Exception ex) {
                     SwingUtilities.invokeLater(() -> {
                         restaurarBoton();

@@ -54,6 +54,10 @@ public class NotaCreditoService {
     /**
      * Genera una Nota de Crédito Electrónica completa
      */
+    /**
+     * Genera una Nota de Crédito Electrónica completa
+     * CORREGIDO: Ahora siempre intenta liberar la cotización asociada.
+     */
     public String generarNotaCredito(NotaCredito nc) throws Exception {
         System.out.println("📄 Generando Nota de Crédito...");
 
@@ -70,15 +74,15 @@ public class NotaCreditoService {
         // 3. Calcular totales (si no están calculados)
         if (nc.getSubtotal() == 0) calcularTotales(nc);
 
-        // Generar XML
-        System.out.println("� [Service] Generando XML...");
+        // 4. Generar XML
+        System.out.println("🛠 [Service] Generando XML...");
         if (xmlGeneratorService == null)
             System.err.println("❌ [Service] xmlGeneratorService es NULL");
         String rutaXml = xmlGeneratorService.generarXMLNotaCredito(nc);
         System.out.println("✅ [Service] XML generado en: " + rutaXml);
         nc.setRutaXml(rutaXml);
 
-        // Generar PDF
+        // 5. Generar PDF
         System.out.println("🛠 [Service] Generando PDF...");
         if (pdfGeneratorService == null)
             System.err.println("❌ [Service] pdfGeneratorService es NULL");
@@ -86,10 +90,12 @@ public class NotaCreditoService {
         System.out.println("✅ [Service] PDF generado en: " + rutaPdf);
         nc.setRutaPdf(rutaPdf);
 
-        // Enviar a SUNAT (Simulado)
+        // 6. Enviar a SUNAT (Simulado)
         System.out.println("🛠 [Service] Enviando a SUNAT...");
         if (sunatApiService == null)
             System.err.println("❌ [Service] sunatApiService es NULL");
+        
+        // Nota: Asegúrate de tener importado SunatApiService.RespuestaSUNAT
         SunatApiService.RespuestaSUNAT respuesta = sunatApiService.enviarNotaCredito(rutaXml);
 
         String mensaje;
@@ -104,15 +110,23 @@ public class NotaCreditoService {
         }
         System.out.println("✅ [Service] Respuesta SUNAT procesada: " + nc.getEstadoSunat());
 
-        // Guardar en memoria (o persistir en JSON si se implementara)
+        // 7. Guardar en memoria y persistir JSON
         notasCreditoEnMemoria.add(nc);
         jsonService.guardarNotasCredito(notasCreditoEnMemoria);
-        
-        if (nc.getTipoNotaCredito().toUpperCase().contains("ANULACION")) {
+
+        // -----------------------------------------------------------------------
+        // 8. LIBERAR COTIZACIÓN (CORREGIDO)
+        // Antes había un IF que solo entraba si era "ANULACION". 
+        // Lo hemos quitado para que SIEMPRE intente liberar la cotización si hay referencia.
+        // -----------------------------------------------------------------------
+        if (nc.getNumeroFacturaRef() != null && !nc.getNumeroFacturaRef().trim().isEmpty()) {
+            System.out.println("🔄 [Service] Notificando al controlador para liberar cotización ref: " + nc.getNumeroFacturaRef());
+            // Esto llamará al método blindado que pusimos en CotizacionController
             cotizacionController.anularCotizacionPorFactura(nc.getNumeroFacturaRef());
         }
+        // -----------------------------------------------------------------------
 
-        // 8. Mensaje de éxito
+        // 9. Mensaje de éxito final para la vista
         mensaje = String.format(
                 "✓ Nota de Crédito Generada Exitosamente\n\n" +
                         "Serie-Número: %s-%08d\n" +
@@ -131,7 +145,7 @@ public class NotaCreditoService {
                 nc.getEstadoSunat(),
                 rutaXml,
                 rutaPdf);
-
+            
         return mensaje;
     }
 

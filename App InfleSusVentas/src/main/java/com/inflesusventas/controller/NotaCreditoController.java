@@ -22,19 +22,26 @@ public class NotaCreditoController {
     @Autowired
     private ComprobanteService comprobanteService;
 
-    // Estado de la NC en proceso
     private NotaCredito notaActual;
     private ComprobanteElectronico facturaReferencia;
-
-    private int contadorNC = 1; // En app real, cargar de BD o archivo
+    private int contadorNC = 1; 
 
     public NotaCreditoController() {
         iniciarNuevaNota();
     }
 
+    public void recalcularTotales() {
+    double subtotal = 0;
+    for (ItemNotaCredito item : notaActual.getItems()) {
+        subtotal += item.getSubtotal();
+    }
+    this.notaActual.setSubtotal(subtotal);
+    this.notaActual.setIgv(subtotal * 0.18);
+    this.notaActual.setTotal(subtotal * 1.18);
+    }
     public void iniciarNuevaNota() {
         this.notaActual = new NotaCredito();
-        this.notaActual.setSerie("FC01"); // Serie por defecto para NC
+        this.notaActual.setSerie("FC01");
         this.notaActual.setNumero(contadorNC);
         this.notaActual.setFechaEmision(LocalDate.now());
         this.notaActual.setMoneda("PEN");
@@ -42,26 +49,33 @@ public class NotaCreditoController {
     }
 
     /**
-     * Busca una factura y carga sus datos en la NC actual
+     * CORREGIDO: Asegura que la referencia tenga el formato completo ID
      */
     public boolean cargarFacturaReferencia(String idFactura) {
+        System.out.println("🔍 Buscando factura para referencia: " + idFactura);
         ComprobanteElectronico factura = comprobanteService.buscarPorId(idFactura);
 
         if (factura != null) {
             this.facturaReferencia = factura;
 
-            // Copiar datos de cabecera
             this.notaActual.setRucCliente(factura.getRucCliente());
             this.notaActual.setRazonSocialCliente(factura.getRazonSocialCliente());
-            this.notaActual.setNumeroFacturaRef(factura.getSerie() + "-" + String.format("%08d", factura.getNumero()));
+            
+            // --- CORRECCIÓN CLAVE ---
+            // Usamos el ID completo de la factura (que incluye RUC) para que coincida con la cotización
+            // Si factura.getId() es nulo, intentamos reconstruirlo, pero preferimos el ID.
+            String refCompleta = (factura.getId() != null) ? factura.getId() : idFactura;
+            
+            this.notaActual.setNumeroFacturaRef(refCompleta);
+            // ------------------------
+
             this.notaActual.setMoneda(factura.getMoneda());
 
-            // Copiar ítems (adaptando de ProductoCotizacion a ItemNotaCredito)
             List<ItemNotaCredito> itemsNC = new ArrayList<>();
             if (factura.getItems() != null) {
                 for (ProductoCotizacion prod : factura.getItems()) {
                     ItemNotaCredito item = new ItemNotaCredito(
-                            "UND", // Asumido, ya que ProductoCotizacion no siempre tiene UM
+                            "UND", 
                             prod.getCantidad(),
                             prod.getDescripcion(),
                             prod.getPrecioBase());
@@ -73,31 +87,25 @@ public class NotaCreditoController {
 
             return true;
         }
+        System.err.println("❌ No se encontró la factura con ID: " + idFactura);
         return false;
     }
 
-    public void actualizarMotivo(String motivo) {
-        this.notaActual.setMotivoSustento(motivo);
-    }
-
-    public void recalcularTotales() {
-        double subtotal = 0;
-        for (ItemNotaCredito item : notaActual.getItems()) {
-            subtotal += item.getSubtotal();
-        }
-        this.notaActual.setSubtotal(subtotal);
-        this.notaActual.setIgv(subtotal * 0.18);
-        this.notaActual.setTotal(subtotal * 1.18);
-    }
+    // ... resto de métodos (actualizarMotivo, recalcularTotales, etc.) igual ...
 
     public NotaCredito emitirNotaCredito() {
         try {
+            // Validar que la referencia no sea nula antes de enviar
+            if (notaActual.getNumeroFacturaRef() == null || notaActual.getNumeroFacturaRef().startsWith("null")) {
+                System.err.println("⚠️ ADVERTENCIA: La referencia parece incorrecta: " + notaActual.getNumeroFacturaRef());
+                // Podrías lanzar error o corregirlo aquí si tienes el ID a mano
+            }
+
             String resultado = notaCreditoService.generarNotaCredito(this.notaActual);
-            // Guardamos la referencia a la nota emitida antes de resetear
             NotaCredito notaEmitida = this.notaActual;
 
             this.contadorNC++;
-            iniciarNuevaNota(); // Limpiar para la siguiente
+            iniciarNuevaNota(); 
 
             return notaEmitida;
         } catch (Exception e) {
@@ -106,16 +114,10 @@ public class NotaCreditoController {
             return null;
         }
     }
-
-    // Getters para la vista
-    public NotaCredito getNotaActual() {
-        return notaActual;
-    }
-
-    public ComprobanteElectronico getFacturaReferencia() {
-        return facturaReferencia;
-    }
-
+    
+    // ... Getters y setters ...
+    public NotaCredito getNotaActual() { return notaActual; }
+    public ComprobanteElectronico getFacturaReferencia() { return facturaReferencia; }
     public void guardarEdicionItem(int index, String nuevaDescripcion) {
         if (notaActual != null && notaActual.getItems() != null && index >= 0 && index < notaActual.getItems().size()) {
             notaActual.getItems().get(index).setDescripcionCorregida(nuevaDescripcion);

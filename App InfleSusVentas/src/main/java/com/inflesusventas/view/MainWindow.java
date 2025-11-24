@@ -278,27 +278,28 @@ public class MainWindow extends JFrame {
         panelContenido.removeAll();
 
         try {
-            // 1. Obtener los servicios necesarios
             ClienteService clienteService = context.getBean(ClienteService.class);
             ComprobanteService compService = context.getBean(ComprobanteService.class);
 
-            // 2. Crear la vista NUEVA (esto fuerza la recarga de datos)
+            // 1. IMPORTANTE: OBLIGAR AL CONTROLADOR A LEER EL DISCO OTRA VEZ
+            // Esto leerá el JSON que acaba de ser modificado por la Nota de Crédito
+            cotizacionController.recargarDatos(); 
+
             ComprobanteFormView vistaComprobantes = new ComprobanteFormView(
                     cotizacionController,
                     clienteService,
                     compService);
 
-            // 3. IMPORTANTE: Forzar la lectura de datos explícitamente
+            // 2. CARGAR LA TABLA
             vistaComprobantes.cargarProductosDesdeCotizacion();
 
             panelContenido.add(vistaComprobantes);
-            System.out.println("✓ Vista de comprobantes actualizada");
 
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al cargar comprobantes: " + e.getMessage());
         }
-
+        // ... revalidate y repaint ...
+    
         panelContenido.revalidate();
         panelContenido.repaint();
     }
