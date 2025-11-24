@@ -80,7 +80,6 @@ Modelos:
     public class ComprobanteElectronico {
 
     private String id;
-    private String tipoComprobante; // e.g. "Factura", "Boleta"
     private LocalDateTime fechaEmision;
     private String rucCliente;
     private String razonSocialCliente;
@@ -100,14 +99,6 @@ Modelos:
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getTipoComprobante() {
-        return tipoComprobante;
-    }
-
-    public void setTipoComprobante(String tipoComprobante) {
-        this.tipoComprobante = tipoComprobante;
     }
 
     public LocalDateTime getFechaEmision() {
