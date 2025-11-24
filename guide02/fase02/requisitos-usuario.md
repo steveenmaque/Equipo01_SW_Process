@@ -6,10 +6,8 @@ El ámbito funcional identificado corresponde principalmente al área de ventas,
 - Generar cotizaciones rápidas y numeradas correlativamente.
 - Mostrar datos mínimos en la cotización como cliente, RUC, teléfono, montos, IGV, condiciones y vigencia.
 - Notificar sobre errores en descripciones o unidades de medida.
-- Emitir facturas y boletas directamente con SUNAT.
+- Emitir facturas y boletas.
 - Vincular las guías de remisión remitente a las ventas.
-- Almacenar y envíar por correo los PDF/XML con código QR.
-- Disponibilizar el sistema durante los horarios laborales (8:00 a. m. – 6:00 p. m.) y recuperarse ante caídas en un plazo máximo de 4 horas.
 
 ## Anexo A: Técnicas de obtención de requisitos de software
 Para la recopilación de requisitos del sistema se aplicó la técnica de entrevista estructurada, oral y uno a uno.
