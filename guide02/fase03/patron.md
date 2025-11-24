@@ -1,4 +1,5 @@
-<img width="1600" height="751" alt="Patrón" src="https://github.com/user-attachments/assets/4d9718de-6ebc-454d-aca0-754569ac8026" />
+<img width="1024" height="479" alt="image" src="https://github.com/user-attachments/assets/48c611aa-1749-444c-9e93-6360def1963e" />
+
 
 
 ## Patrón de software
