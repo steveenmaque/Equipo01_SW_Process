@@ -46,9 +46,9 @@ import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 @Service
 public class PdfGeneratorService {
 
-    private static final String DIRECTORIO_PDF = "documentos/pdf/cotizaciones/";
-    private static final String CONFIG_FILE = "src/main/resources/config/empresa.properties";
-    private static final String LOGO_PATH = "src/main/resources/images/logo_empresa.png";
+    private static final String DIRECTORIO_PDF = "App InfleSusVentas/documentos/pdf/cotizaciones/";
+    private static final String CONFIG_FILE = "App InfleSusVentas/src/main/resources/config/empresa.properties";
+    private static final String LOGO_PATH = "App InfleSusVentas/src/main/resources/images/logo_empresa.png";
 
     // Colores corporativos (se cargan desde properties)
     private Color colorPrimario = new DeviceRgb(102, 126, 234); // #667eea
@@ -177,17 +177,15 @@ public class PdfGeneratorService {
             // 2. INFO EMPRESA (Columna Derecha)
             Cell infoCell = new Cell();
             // Nombre Comercial o Razón Social destacado
-            infoCell.add(new Paragraph(configuracion.getProperty("empresa.razon_social"))
-                    .setFontSize(14).setBold().setFontColor(colorPrimario));
             
             // RUC y Datos de contacto
             infoCell.add(new Paragraph("RUC: " + configuracion.getProperty("empresa.ruc"))
                     .setFontSize(10).setBold());
-            infoCell.add(new Paragraph(configuracion.getProperty("empresa.direccion", ""))
+            infoCell.add(new Paragraph(configuracion.getProperty("empresa.direccion"))
                     .setFontSize(9));
-            infoCell.add(new Paragraph("Teléfono: " + configuracion.getProperty("empresa.telefono", ""))
+            infoCell.add(new Paragraph("Teléfono: " + configuracion.getProperty("empresa.telefono"))
                     .setFontSize(9));
-            infoCell.add(new Paragraph("Email: " + configuracion.getProperty("empresa.email", ""))
+            infoCell.add(new Paragraph("Email: " + configuracion.getProperty("empresa.email"))
                     .setFontSize(9));
             
             infoCell.setBorder(Border.NO_BORDER);
@@ -286,7 +284,6 @@ public class PdfGeneratorService {
         // Datos del Cliente
         agregarFilaDatoCotizacion(tableDatos, "Cliente:", cotizacion.getCliente().getRazonSocial());
         agregarFilaDatoCotizacion(tableDatos, "N.º RUC:", cotizacion.getCliente().getRuc());
-        agregarFilaDatoCotizacion(tableDatos, "Atención:", cotizacion.getCliente().getNombreContacto() != null ? cotizacion.getCliente().getNombreContacto() : "-");
         
         String telefono = cotizacion.getCliente().getTelefono() != null ? cotizacion.getCliente().getTelefono() : "-";
         agregarFilaDatoCotizacion(tableDatos, "Teléfono:", telefono);
@@ -299,8 +296,8 @@ public class PdfGeneratorService {
 
         // 3. CUENTA BBVA (Texto suelto debajo de los datos)
         String cuentaBBVA = configuracion.getProperty("banco.bbva.nombre", "Banco BBVA") + ": " + 
-                            configuracion.getProperty("banco.bbva.cuenta", "");
-        document.add(new Paragraph(cuentaBBVA).setFontSize(10).setBold().setMarginTop(8));
+                            configuracion.getProperty("banco.bbva.cuenta");
+        document.add(new Paragraph(cuentaBBVA).setFontSize(9).setBold().setMarginTop(8));
         
         // 4. TABLA DE DETRACCIÓN Y VALIDEZ (3 columnas con encabezado gris)
         Table tableBancos = new Table(UnitValue.createPercentArray(new float[]{1.5f, 1, 1}));
@@ -831,7 +828,7 @@ public class PdfGeneratorService {
         table.addCell(labelCell);
         table.addCell(valorCell);
     }
-    
+
     /**
      * Datos del cliente (adaptado para facturas)
      */
