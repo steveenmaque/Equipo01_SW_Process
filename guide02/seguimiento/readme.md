@@ -8,7 +8,7 @@ En el primer ciclo se identificaron los objetivos generales del sistema y se def
 
 ### Ciclo 2 – Problemas con la API de SUNAT
 
-Durante este ciclo se intentó implementar la API oficial de SUNAT para la validación de comprobantes electrónicos. Sin embargo, se presentaron varios inconvenientes, como la complejidad de los endpoints, restricciones en el acceso y fallas en las pruebas locales. Estos riesgos no pudieron ser reducidos de manera efectiva dentro del tiempo previsto.
+En este ciclo se evaluó la posibilidad de integrar la API de SUNAT para la validación de comprobantes electrónicos. Sin embargo, al revisar la documentación, los requisitos técnicos y los procesos necesarios para su implementación, se identificó que la integración implicaba una alta complejidad, además de una considerable inversión de tiempo para configurarla y probarla.
 Debido a ello, se decidió descartar la integración real con la API y optar por una simulación controlada de la validación, permitiendo continuar con el desarrollo sin comprometer la funcionalidad general del sistema.
 
 ### Ciclo 3 – Descarte del envío automático de comprobantes por correo
