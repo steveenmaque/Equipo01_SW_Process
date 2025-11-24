@@ -25,9 +25,7 @@ Este documento detalla los defectos identificados durante la ejecución de las p
   4. Ejecutar el método de creación/validación.
   5. **Resultado Actual:** El objeto se crea exitosamente con motivo vacío.
   6. **Resultado Esperado:** El sistema debería lanzar una `IllegalArgumentException` o error de validación indicando que el motivo es obligatorio.
-- **Evidencia:**
-  > *Ver captura: `evidencias/CN14_NC_Motivo_Obligatorio_FALLO.png`*
-  > (El test `testValidarMotivoNotaCreditoObligatorio` confirma que `isEmpty()` es true en lugar de fallar).
+
 - **Fecha del defecto:** 2025-11-23
 - **Detectado por:** Junior Zelada Llaxa (Tester)
 - **Estado del defecto:**  Abierto
@@ -48,9 +46,7 @@ Este documento detalla los defectos identificados durante la ejecución de las p
   4. Intentar guardar o procesar la cotización.
   5. **Resultado Actual:** El sistema permite la operación o retorna null en el getter sin error previo.
   6. **Resultado Esperado:** El sistema debería impedir la creación de una cotización sin cliente asociado.
-- **Evidencia:**
-  > *Ver captura: `evidencias/CN15_Cotizacion_Sin_Cliente_FALLO.png`*
-  > (El test `testCotizacionSinClienteInvalida` muestra que el cliente permanece nulo sin rechazo).
+
 - **Fecha del defecto:** 2025-11-23
 - **Detectado por:** Junior Zelada Llaxa (Tester)
 - **Estado del defecto:**  Abierto
@@ -71,9 +67,7 @@ Este documento detalla los defectos identificados durante la ejecución de las p
   4. Verificar el estado del objeto.
   5. **Resultado Actual:** La lista de ítems está vacía y el objeto se considera válido por el sistema actual.
   6. **Resultado Esperado:** Debería existir una validación que exija `items.size() > 0`.
-- **Evidencia:**
-  > *Ver captura: `evidencias/CN16_Comprobante_Sin_Items_FALLO.png`*
-  > (El test `testComprobanteSinItemsInvalido` confirma que la lista vacía es aceptada).
+
 - **Fecha del defecto:** 2025-11-23
 - **Detectado por:** Junior Zelada Llaxa (Tester)
 - **Estado del defecto:**  Abierto
